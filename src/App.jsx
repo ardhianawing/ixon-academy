@@ -17,6 +17,7 @@ import Auth from './pages/Auth'
 import Checkout from './pages/Checkout'
 import PaymentSuccess from './pages/PaymentSuccess'
 import Billing from './pages/Billing'
+import Onboarding from './pages/Onboarding'
 import { Events, Scouting, Pricing, Notifications } from './pages/OtherPages'
 
 export default function App() {
@@ -29,6 +30,7 @@ export default function App() {
       {!showBumper && (
         <Routes>
           <Route path="/login" element={<Auth />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/*" element={
             <>
               <Navbar />
