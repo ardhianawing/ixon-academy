@@ -1,9 +1,9 @@
-import { useState } from 'react'
-import { Link, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Home, BookOpen, Users, Target, Trophy, UserCircle,
-  Bell, Crown, Menu, X, ChevronRight, Gamepad2, BarChart3
+  Bell, Crown, Menu, X, ChevronRight, Gamepad2, BarChart3, LogOut
 } from 'lucide-react'
 
 const navItems = [
@@ -18,7 +18,25 @@ const navItems = [
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [showLogout, setShowLogout] = useState(false)
+  const [user, setUser] = useState(null)
   const location = useLocation()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // Check if user is logged in
+    const userData = localStorage.getItem('ixon_user')
+    if (userData) {
+      setUser(JSON.parse(userData))
+    }
+  }, [location])
+
+  const handleLogout = () => {
+    localStorage.removeItem('ixon_user')
+    setUser(null)
+    setShowLogout(false)
+    navigate('/login')
+  }
 
   return (
     <>
@@ -116,31 +134,83 @@ export default function Navbar() {
             }} />
           </Link>
 
-          {/* Tier badge */}
-          <Link to="/pricing" style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            background: 'rgba(255, 215, 0, 0.1)',
-            border: '1px solid rgba(255, 215, 0, 0.3)',
-            textDecoration: 'none',
-            fontSize: '11px',
-            fontFamily: 'Rajdhani, sans-serif',
-            fontWeight: 700,
-            color: '#ffd700',
-            textTransform: 'uppercase',
-            letterSpacing: '0.1em',
-          }}>
-            <Crown size={12} />
-            Gold
-          </Link>
+          {/* Tier badge - only show if logged in */}
+          {user && (
+            <Link to="/pricing" style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              padding: '4px 10px',
+              borderRadius: '6px',
+              background: user.tier === 'Platinum' ? 'rgba(0, 240, 255, 0.1)' : user.tier === 'Gold' ? 'rgba(255, 215, 0, 0.1)' : user.tier === 'Silver' ? 'rgba(192, 192, 192, 0.1)' : 'rgba(136, 136, 136, 0.1)',
+              border: user.tier === 'Platinum' ? '1px solid rgba(0, 240, 255, 0.3)' : user.tier === 'Gold' ? '1px solid rgba(255, 215, 0, 0.3)' : user.tier === 'Silver' ? '1px solid rgba(192, 192, 192, 0.3)' : '1px solid rgba(136, 136, 136, 0.3)',
+              textDecoration: 'none',
+              fontSize: '11px',
+              fontFamily: 'Rajdhani, sans-serif',
+              fontWeight: 700,
+              color: user.tier === 'Platinum' ? '#00f0ff' : user.tier === 'Gold' ? '#ffd700' : user.tier === 'Silver' ? '#c0c0c0' : '#888',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+            }}>
+              <Crown size={12} />
+              {user.tier}
+            </Link>
+          )}
 
-          {/* Profile */}
-          <Link to="/profile" style={{ textDecoration: 'none', color: '#8888a8' }}>
-            <UserCircle size={28} />
-          </Link>
+          {/* Profile with logout */}
+          {user ? (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setShowLogout(!showLogout)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: '#8888a8' }}
+              >
+                <UserCircle size={28} />
+              </button>
+              {showLogout && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  style={{
+                    position: 'absolute', right: 0, top: '100%', marginTop: 8, width: 180,
+                    background: 'rgba(12, 12, 20, 0.98)', backdropFilter: 'blur(20px)',
+                    border: '1px solid rgba(0, 240, 255, 0.2)', borderRadius: 8, padding: 8, zIndex: 1001
+                  }}
+                >
+                  <div style={{ padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <div className="font-rajdhani" style={{ fontSize: 13, fontWeight: 700 }}>{user.name || 'User'}</div>
+                    <div className="font-exo" style={{ fontSize: 11, color: '#555570' }}>{user.email}</div>
+                  </div>
+                  <Link
+                    to="/profile"
+                    onClick={() => setShowLogout(false)}
+                    className="font-rajdhani"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', textDecoration: 'none',
+                      color: '#8888a8', fontSize: 12, fontWeight: 600, textTransform: 'uppercase',
+                      borderRadius: 4, transition: 'all 0.2s'
+                    }}
+                  >
+                    <UserCircle size={14} /> Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="font-rajdhani"
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', width: '100%',
+                      background: 'none', border: 'none', color: '#ff2d55', fontSize: 12, fontWeight: 600,
+                      textTransform: 'uppercase', cursor: 'pointer', borderRadius: 4, textAlign: 'left'
+                    }}
+                  >
+                    <LogOut size={14} /> Logout
+                  </button>
+                </motion.div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" style={{ textDecoration: 'none', color: '#8888a8' }}>
+              <UserCircle size={28} />
+            </Link>
+          )}
 
           {/* Mobile menu toggle */}
           <button

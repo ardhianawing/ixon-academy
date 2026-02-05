@@ -9,7 +9,10 @@ import Leaderboard from './pages/Leaderboard'
 import Courses from './pages/Courses'
 import Community from './pages/Community'
 import Evaluation from './pages/Evaluation'
-import { Events, Scouting, Pricing, CoachDashboard, Notifications, Login } from './pages/OtherPages'
+import AdminDashboard from './pages/AdminDashboard'
+import CoachDashboard from './pages/CoachDashboard'
+import Auth from './pages/Auth'
+import { Events, Scouting, Pricing, Notifications } from './pages/OtherPages'
 
 export default function App() {
   const [showBumper, setShowBumper] = useState(true)
@@ -20,7 +23,7 @@ export default function App() {
 
       {!showBumper && (
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={<Auth />} />
           <Route path="/*" element={
             <>
               <Navbar />
@@ -36,6 +39,7 @@ export default function App() {
                 <Route path="/scouting" element={<Scouting />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/coach" element={<CoachDashboard />} />
+                <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/notifications" element={<Notifications />} />
               </Routes>
             </>
