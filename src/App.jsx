@@ -7,6 +7,8 @@ import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import Leaderboard from './pages/Leaderboard'
 import Courses from './pages/Courses'
+import CourseDetail from './pages/CourseDetail'
+import LearningInterface from './pages/LearningInterface'
 import Community from './pages/Community'
 import Evaluation from './pages/Evaluation'
 import AdminDashboard from './pages/AdminDashboard'
@@ -33,6 +35,8 @@ export default function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/leaderboard" element={<Leaderboard />} />
                 <Route path="/courses" element={<Courses />} />
+                <Route path="/courses/:courseId" element={<CourseDetail />} />
+                <Route path="/learn/:courseId/:lessonId" element={<LearningInterface />} />
                 <Route path="/community" element={<Community />} />
                 <Route path="/evaluation" element={<Evaluation />} />
                 <Route path="/events" element={<Events />} />
