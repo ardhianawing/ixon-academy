@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion, useInView } from 'framer-motion'
 import {
   Trophy, Calendar, Users, MapPin, Clock, ChevronRight,
@@ -117,6 +118,8 @@ const tiers = [
 ]
 
 export function Pricing() {
+  const navigate = useNavigate()
+
   return (
     <div style={{ minHeight: '100vh', paddingTop: 80, paddingBottom: 40, maxWidth: 1000, margin: '0 auto', padding: '80px 16px 40px' }}>
       <Anim>
@@ -150,13 +153,16 @@ export function Pricing() {
                   </div>
                 ))}
               </div>
-              <button style={{
-                marginTop: 20, padding: 10, borderRadius: 8, textAlign: 'center', width: '100%',
-                fontFamily: 'Rajdhani', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', cursor: 'pointer',
-                color: t.popular ? '#000' : t.color,
-                background: t.popular ? `linear-gradient(135deg, ${t.color}, #ff8c00)` : 'transparent',
-                border: t.popular ? 'none' : `1px solid ${t.color}40`,
-              }}>
+              <button
+                onClick={() => t.name === 'Free' ? navigate('/login') : navigate(`/checkout?tier=${t.name.toLowerCase()}`)}
+                style={{
+                  marginTop: 20, padding: 10, borderRadius: 8, textAlign: 'center', width: '100%',
+                  fontFamily: 'Rajdhani', fontWeight: 700, fontSize: 13, textTransform: 'uppercase', cursor: 'pointer',
+                  color: t.popular ? '#000' : t.color,
+                  background: t.popular ? `linear-gradient(135deg, ${t.color}, #ff8c00)` : 'transparent',
+                  border: t.popular ? 'none' : `1px solid ${t.color}40`,
+                }}
+              >
                 {t.name === 'Free' ? 'Daftar Gratis' : 'Upgrade Now'}
               </button>
             </div>

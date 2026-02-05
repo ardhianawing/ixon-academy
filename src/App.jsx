@@ -14,6 +14,9 @@ import Evaluation from './pages/Evaluation'
 import AdminDashboard from './pages/AdminDashboard'
 import CoachDashboard from './pages/CoachDashboard'
 import Auth from './pages/Auth'
+import Checkout from './pages/Checkout'
+import PaymentSuccess from './pages/PaymentSuccess'
+import Billing from './pages/Billing'
 import { Events, Scouting, Pricing, Notifications } from './pages/OtherPages'
 
 export default function App() {
@@ -42,6 +45,9 @@ export default function App() {
                 <Route path="/events" element={<Events />} />
                 <Route path="/scouting" element={<Scouting />} />
                 <Route path="/pricing" element={<Pricing />} />
+                <Route path="/checkout" element={<Checkout />} />
+                <Route path="/payment-success" element={<PaymentSuccess />} />
+                <Route path="/billing" element={<Billing />} />
                 <Route path="/coach" element={<CoachDashboard />} />
                 <Route path="/admin" element={<AdminDashboard />} />
                 <Route path="/notifications" element={<Notifications />} />
