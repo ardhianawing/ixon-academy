@@ -119,3 +119,22 @@ body {
 
 .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-float { animation: float 3s ease-in-out infinite; }
+
+/* Responsive Navbar */
+.desktop-nav {
+  display: none !important;
+}
+
+.mobile-menu-toggle {
+  display: flex !important;
+}
+
+@media (min-width: 1024px) {
+  .desktop-nav {
+    display: flex !important;
+  }
+
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+}

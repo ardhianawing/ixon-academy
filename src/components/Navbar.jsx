@@ -57,11 +57,11 @@ export default function Navbar() {
 
         {/* Desktop Nav */}
         <div style={{
-          display: 'flex',
+          display: 'none',
           alignItems: 'center',
           gap: '4px',
         }}
-          className="hidden md:flex"
+          className="desktop-nav"
         >
           {navItems.map(item => {
             const active = location.pathname === item.path
@@ -145,7 +145,7 @@ export default function Navbar() {
           {/* Mobile menu toggle */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden"
+            className="mobile-menu-toggle"
             style={{
               background: 'none',
               border: 'none',
