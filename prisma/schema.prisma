@@ -1,0 +1,722 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── AUTH & USERS ────────────────────────────────────
+
+enum UserRole {
+  PLAYER
+  COACH
+  SCOUTING
+  ADMIN
+  PARENT
+}
+
+enum Tier {
+  FREE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+model User {
+  id                String    @id @default(cuid())
+  namaAsli          String    @map("nama_asli")
+  phone             String    @unique
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  avatarUrl         String?   @map("avatar_url")
+  role              UserRole  @default(PLAYER)
+  tier              Tier      @default(FREE)
+  trialEligibility  Boolean   @default(true) @map("trial_eligibility")
+  emailVerifiedAt   DateTime? @map("email_verified_at")
+  phoneVerifiedAt   DateTime? @map("phone_verified_at")
+  parentUserId      String?   @map("parent_user_id")
+  onboardingDone    Boolean   @default(false) @map("onboarding_done")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  parentUser        User?     @relation("ParentChild", fields: [parentUserId], references: [id])
+  children          User[]    @relation("ParentChild")
+  players           Player[]
+  subscriptions     Subscription[]
+  posts             CommunityPost[]
+  replies           CommunityReply[]
+  reactions         CommunityReaction[]
+  reports           CommunityReport[]   @relation("Reporter")
+  reputation        UserReputation?
+  submissions       EvaluationSubmission[]
+  coachProfile      CoachProfile?
+  coachWallet       CoachWallet?
+  missions          UserMission[]
+  wellnessCheckins  WellnessCheckin[]
+  careerEnrollments CareerEnrollment[]
+  notifications     Notification[]
+  eventRegistrations EventRegistration[]
+
+  @@map("users")
+}
+
+// ─── GAMES & PLAYERS ─────────────────────────────────
+
+model Game {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  iconUrl   String?  @map("icon_url")
+  status    String   @default("active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  players       Player[]
+  courses       Course[]
+  posts         CommunityPost[]
+  events        Event[]
+  coachProfiles CoachProfile[]
+
+  @@map("games")
+}
+
+model Player {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  gameId            String  @map("game_id")
+  nickname          String
+  serverId          String? @map("server_id")
+  rank              String
+  roleIngame        String  @map("role_ingame")
+  heroPool          Json    @default("[]") @map("hero_pool")
+  talentScore       Float   @default(0) @map("talent_score")
+  skillSignal       Float   @default(0) @map("skill_signal")
+  mindsetSignal     Float   @default(0) @map("mindset_signal")
+  commitmentSignal  Float   @default(0) @map("commitment_signal")
+  attitudeScore     Float   @default(100) @map("attitude_score")
+  xp                Int     @default(0)
+  level             Int     @default(1)
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  user              User    @relation(fields: [userId], references: [id])
+  game              Game    @relation(fields: [gameId], references: [id])
+  submissions       EvaluationSubmission[]
+  talentBoard       TalentBoard?
+  eventResults      EventResult[]
+
+  @@unique([userId, gameId])
+  @@index([talentScore])
+  @@index([gameId, rank])
+  @@map("players")
+}
+
+// ─── SUBSCRIPTIONS ───────────────────────────────────
+
+model Subscription {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  tier          Tier
+  startDate     DateTime @map("start_date")
+  endDate       DateTime @map("end_date")
+  status        String   @default("active")
+  paymentMethod String?  @map("payment_method")
+  amount        Int      @default(0)
+  currency      String   @default("IDR")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user          User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, status])
+  @@map("subscriptions")
+}
+
+// ─── LMS ─────────────────────────────────────────────
+
+enum CourseCategory {
+  HARD_SKILL
+  SOFT_SKILL
+  MENTAL
+  WELLNESS
+  CAREER
+}
+
+enum CourseLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+  EXPERT
+  ALL
+}
+
+model Course {
+  id                String         @id @default(cuid())
+  gameId            String?        @map("game_id")
+  title             String
+  description       String
+  thumbnailUrl      String?        @map("thumbnail_url")
+  level             CourseLevel
+  category          CourseCategory
+  totalLessons      Int            @default(0) @map("total_lessons")
+  totalDurationMin  Int            @default(0) @map("total_duration_min")
+  isPublished       Boolean        @default(false) @map("is_published")
+  isFreePreview     Boolean        @default(false) @map("is_free_preview")
+  sortOrder         Int            @default(0) @map("sort_order")
+  createdAt         DateTime       @default(now()) @map("created_at")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+
+  game              Game?          @relation(fields: [gameId], references: [id])
+  modules           Module[]
+  progress          UserCourseProgress[]
+
+  @@map("courses")
+}
+
+model Module {
+  id        String   @id @default(cuid())
+  courseId   String  @map("course_id")
+  title     String
+  sortOrder Int     @default(0) @map("sort_order")
+
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons   Lesson[]
+
+  @@map("modules")
+}
+
+model Lesson {
+  id              String  @id @default(cuid())
+  moduleId        String  @map("module_id")
+  title           String
+  description     String?
+  videoUrl        String? @map("video_url")
+  videoDurationSec Int?   @map("video_duration_sec")
+  contentMarkdown String? @map("content_markdown")
+  sortOrder       Int     @default(0) @map("sort_order")
+  isFreePreview   Boolean @default(false) @map("is_free_preview")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  module          Module  @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  quiz            Quiz?
+  userProgress    UserLessonProgress[]
+
+  @@map("lessons")
+}
+
+model Quiz {
+  id              String   @id @default(cuid())
+  lessonId        String   @unique @map("lesson_id")
+  title           String
+  passScorePct    Int      @default(70) @map("pass_score_pct")
+  timeLimitMin    Int?     @map("time_limit_min")
+
+  lesson          Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  questions       QuizQuestion[]
+
+  @@map("quizzes")
+}
+
+model QuizQuestion {
+  id               String @id @default(cuid())
+  quizId           String @map("quiz_id")
+  questionText     String @map("question_text")
+  options          Json
+  correctAnswerIdx Int    @map("correct_answer_idx")
+  explanation      String?
+  sortOrder        Int    @default(0) @map("sort_order")
+
+  quiz             Quiz   @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@map("quiz_questions")
+}
+
+model UserCourseProgress {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  courseId          String   @map("course_id")
+  lessonsCompleted Int      @default(0) @map("lessons_completed")
+  quizScoreAvg     Float?   @map("quiz_score_avg")
+  status           String   @default("in_progress")
+  startedAt        DateTime @default(now()) @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+
+  course           Course   @relation(fields: [courseId], references: [id])
+
+  @@unique([userId, courseId])
+  @@map("user_course_progress")
+}
+
+model UserLessonProgress {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  lessonId       String    @map("lesson_id")
+  watchedSeconds Int       @default(0) @map("watched_seconds")
+  isCompleted    Boolean   @default(false) @map("is_completed")
+  completedAt    DateTime? @map("completed_at")
+
+  lesson         Lesson    @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+  @@map("user_lesson_progress")
+}
+
+// ─── COMMUNITY ───────────────────────────────────────
+
+model CommunityPost {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  gameId        String?  @map("game_id")
+  category      String
+  title         String
+  content       String
+  reactionsCount Int     @default(0) @map("reactions_count")
+  repliesCount  Int      @default(0) @map("replies_count")
+  viewsCount    Int      @default(0) @map("views_count")
+  reportsCount  Int      @default(0) @map("reports_count")
+  isPinned      Boolean  @default(false) @map("is_pinned")
+  isLocked      Boolean  @default(false) @map("is_locked")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  user          User     @relation(fields: [userId], references: [id])
+  game          Game?    @relation(fields: [gameId], references: [id])
+  replies       CommunityReply[]
+  reactions     CommunityReaction[]
+  reports       CommunityReport[]
+
+  @@index([gameId, category])
+  @@index([createdAt])
+  @@map("community_posts")
+}
+
+model CommunityReply {
+  id            String   @id @default(cuid())
+  postId        String   @map("post_id")
+  userId        String   @map("user_id")
+  content       String
+  reactionsCount Int     @default(0) @map("reactions_count")
+  reportsCount  Int      @default(0) @map("reports_count")
+  parentReplyId String?  @map("parent_reply_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  post          CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user          User          @relation(fields: [userId], references: [id])
+  parentReply   CommunityReply?  @relation("ReplyThread", fields: [parentReplyId], references: [id])
+  childReplies  CommunityReply[] @relation("ReplyThread")
+
+  @@map("community_replies")
+}
+
+model CommunityReaction {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  reactableType  String   @map("reactable_type")
+  reactableId    String   @map("reactable_id")
+  type           String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user           User     @relation(fields: [userId], references: [id])
+  post           CommunityPost? @relation(fields: [reactableId], references: [id])
+
+  @@unique([userId, reactableType, reactableId])
+  @@map("community_reactions")
+}
+
+model CommunityReport {
+  id              String   @id @default(cuid())
+  reporterUserId  String   @map("reporter_user_id")
+  reportableType  String   @map("reportable_type")
+  reportableId    String   @map("reportable_id")
+  reason          String
+  description     String?
+  status          String   @default("pending")
+  reviewedBy      String?  @map("reviewed_by")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  reporter        User     @relation("Reporter", fields: [reporterUserId], references: [id])
+  post            CommunityPost? @relation(fields: [reportableId], references: [id])
+
+  @@map("community_reports")
+}
+
+model UserReputation {
+  id              String @id @default(cuid())
+  userId          String @unique @map("user_id")
+  totalScore      Int    @default(0) @map("total_score")
+  helpfulCount    Int    @default(0) @map("helpful_count")
+  reportCount     Int    @default(0) @map("report_count")
+  badges          Json   @default("[]")
+  cleanDaysStreak Int    @default(0) @map("clean_days_streak")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  user            User   @relation(fields: [userId], references: [id])
+
+  @@map("user_reputation")
+}
+
+// ─── EVALUATIONS ─────────────────────────────────────
+
+model EvaluationSubmission {
+  id               String    @id @default(cuid())
+  playerId         String    @map("player_id")
+  userId           String    @map("user_id")
+  gameplayUrl      String    @map("gameplay_url")
+  gameplayDesc     String?   @map("gameplay_desc")
+  heroPlayed       String    @map("hero_played")
+  matchContext     String    @map("match_context")
+  status           String    @default("queued")
+  assignedCoachId  String?   @map("assigned_coach_id")
+  priority         String    @default("normal")
+  submittedAt      DateTime  @default(now()) @map("submitted_at")
+  assignedAt       DateTime? @map("assigned_at")
+  completedAt      DateTime? @map("completed_at")
+
+  player           Player    @relation(fields: [playerId], references: [id])
+  user             User      @relation(fields: [userId], references: [id])
+  review           EvaluationReview?
+
+  @@index([status, assignedCoachId])
+  @@map("evaluation_submissions")
+}
+
+model EvaluationReview {
+  id                 String   @id @default(cuid())
+  submissionId       String   @unique @map("submission_id")
+  coachId            String   @map("coach_id")
+  mechanicalScore    Int      @map("mechanical_score")
+  gameSenseScore     Int      @map("game_sense_score")
+  heroMasteryScore   Int      @map("hero_mastery_score")
+  teamworkScore      Int      @map("teamwork_score")
+  mentalScore        Int      @map("mental_score")
+  feedbackText       String   @map("feedback_text")
+  improvementPlan    Json     @map("improvement_plan")
+  reviewDurationMin  Int      @map("review_duration_min")
+  wordCount          Int      @map("word_count")
+  status             String   @default("submitted")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  submission         EvaluationSubmission @relation(fields: [submissionId], references: [id])
+  rating             EvaluationRating?
+
+  @@map("evaluation_reviews")
+}
+
+model EvaluationRating {
+  id            String   @id @default(cuid())
+  reviewId      String   @unique @map("review_id")
+  playerId      String   @map("player_id")
+  clarity       Int
+  relevance     Int
+  actionability Int
+  satisfaction  Int
+  comment       String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  review        EvaluationReview @relation(fields: [reviewId], references: [id])
+
+  @@map("evaluation_ratings")
+}
+
+// ─── COACH ───────────────────────────────────────────
+
+model CoachProfile {
+  id              String  @id @default(cuid())
+  userId          String  @unique @map("user_id")
+  gameId          String  @map("game_id")
+  specialization  Json    @default("[]")
+  bio             String?
+  experienceYears Int     @default(0) @map("experience_years")
+  cqsScore        Float   @default(3.0) @map("cqs_score")
+  totalReviews    Int     @default(0) @map("total_reviews")
+  avgRating       Float   @default(0) @map("avg_rating")
+  isAvailable     Boolean @default(true) @map("is_available")
+  maxDailyReviews Int     @default(5) @map("max_daily_reviews")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  user            User    @relation(fields: [userId], references: [id])
+  game            Game    @relation(fields: [gameId], references: [id])
+
+  @@map("coach_profiles")
+}
+
+model CoachWallet {
+  id              String   @id @default(cuid())
+  userId          String   @unique @map("user_id")
+  balance         Int      @default(0)
+  totalEarned     Int      @default(0) @map("total_earned")
+  totalWithdrawn  Int      @default(0) @map("total_withdrawn")
+  lastWithdrawalAt DateTime? @map("last_withdrawal_at")
+
+  user            User     @relation(fields: [userId], references: [id])
+  transactions    CoachTransaction[]
+
+  @@map("coach_wallets")
+}
+
+model CoachTransaction {
+  id          String   @id @default(cuid())
+  walletId    String   @map("wallet_id")
+  type        String
+  amount      Int
+  referenceId String?  @map("reference_id")
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  wallet      CoachWallet @relation(fields: [walletId], references: [id])
+
+  @@map("coach_transactions")
+}
+
+// ─── EVENTS ──────────────────────────────────────────
+
+model Event {
+  id                  String   @id @default(cuid())
+  gameId              String   @map("game_id")
+  title               String
+  description         String
+  type                String
+  format              String
+  startDate           DateTime @map("start_date")
+  endDate             DateTime @map("end_date")
+  registrationDeadline DateTime @map("registration_deadline")
+  maxParticipants     Int      @map("max_participants")
+  currentParticipants Int      @default(0) @map("current_participants")
+  tierRequired        Tier     @map("tier_required")
+  status              String   @default("upcoming")
+  prizeDescription    String?  @map("prize_description")
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  game                Game     @relation(fields: [gameId], references: [id])
+  registrations       EventRegistration[]
+  results             EventResult[]
+
+  @@map("events")
+}
+
+model EventRegistration {
+  id          String   @id @default(cuid())
+  eventId     String   @map("event_id")
+  userId      String   @map("user_id")
+  teamName    String?  @map("team_name")
+  teamMembers Json?    @map("team_members")
+  status      String   @default("registered")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  event       Event    @relation(fields: [eventId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+
+  @@unique([eventId, userId])
+  @@map("event_registrations")
+}
+
+model EventResult {
+  id               String @id @default(cuid())
+  eventId          String @map("event_id")
+  playerId         String @map("player_id")
+  placement        Int?
+  kills            Int    @default(0)
+  deaths           Int    @default(0)
+  assists          Int    @default(0)
+  performanceScore Float? @map("performance_score")
+  notes            String?
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  event            Event  @relation(fields: [eventId], references: [id])
+  player           Player @relation(fields: [playerId], references: [id])
+
+  @@map("event_results")
+}
+
+// ─── SCOUTING ────────────────────────────────────────
+
+model TalentBoard {
+  id               String    @id @default(cuid())
+  playerId         String    @unique @map("player_id")
+  talentScore      Float     @map("talent_score")
+  skillSignal      Float     @map("skill_signal")
+  mindsetSignal    Float     @map("mindset_signal")
+  commitmentSignal Float     @map("commitment_signal")
+  isShortlisted    Boolean   @default(false) @map("is_shortlisted")
+  shortlistedBy    String?   @map("shortlisted_by")
+  trialStatus      String    @default("none")
+  notes            String?
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  player           Player    @relation(fields: [playerId], references: [id])
+  invitations      TrialInvitation[]
+
+  @@index([talentScore(sort: Desc)])
+  @@map("talent_board")
+}
+
+model TrialInvitation {
+  id            String   @id @default(cuid())
+  talentBoardId String   @map("talent_board_id")
+  invitedBy     String   @map("invited_by")
+  message       String
+  trialDate     DateTime @map("trial_date")
+  trialLocation String?  @map("trial_location")
+  status        String   @default("sent")
+  result        String?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  talentBoard   TalentBoard @relation(fields: [talentBoardId], references: [id])
+
+  @@map("trial_invitations")
+}
+
+// ─── GAMIFICATION ────────────────────────────────────
+
+model DailyMission {
+  id          String  @id @default(cuid())
+  title       String
+  description String
+  type        String
+  xpReward    Int     @map("xp_reward")
+  gameId      String? @map("game_id")
+  isActive    Boolean @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userMissions UserMission[]
+
+  @@map("daily_missions")
+}
+
+model UserMission {
+  id          String    @id @default(cuid())
+  userId      String    @map("user_id")
+  missionId   String    @map("mission_id")
+  date        DateTime  @db.Date
+  status      String    @default("assigned")
+  completedAt DateTime? @map("completed_at")
+
+  user        User         @relation(fields: [userId], references: [id])
+  mission     DailyMission @relation(fields: [missionId], references: [id])
+
+  @@unique([userId, missionId, date])
+  @@map("user_missions")
+}
+
+// ─── WELLNESS ────────────────────────────────────────
+
+model WellnessCheckin {
+  id             String   @id @default(cuid())
+  userId         String   @map("user_id")
+  sleepHours     Float    @map("sleep_hours")
+  exerciseToday  Boolean  @map("exercise_today")
+  screenBreaks   Int      @default(0) @map("screen_breaks")
+  mood           Int
+  handWristPain  Boolean  @default(false) @map("hand_wrist_pain")
+  eyeStrain      Boolean  @default(false) @map("eye_strain")
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("wellness_checkins")
+}
+
+// ─── CAREER PATHWAYS ─────────────────────────────────
+
+model CareerPathway {
+  id              String   @id @default(cuid())
+  title           String
+  slug            String   @unique
+  description     String
+  icon            String
+  durationWeeks   Int      @map("duration_weeks")
+  price           Int
+  requirements    Json     @default("[]")
+  outcomes        Json     @default("[]")
+  isPublished     Boolean  @default(false) @map("is_published")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  enrollments     CareerEnrollment[]
+  certifications  CareerCertification[]
+
+  @@map("career_pathways")
+}
+
+model CareerEnrollment {
+  id              String    @id @default(cuid())
+  userId          String    @map("user_id")
+  pathwayId       String    @map("pathway_id")
+  status          String    @default("enrolled")
+  progressPercent Int       @default(0) @map("progress_percent")
+  enrolledAt      DateTime  @default(now()) @map("enrolled_at")
+  completedAt     DateTime? @map("completed_at")
+
+  user            User           @relation(fields: [userId], references: [id])
+  pathway         CareerPathway  @relation(fields: [pathwayId], references: [id])
+
+  @@unique([userId, pathwayId])
+  @@map("career_enrollments")
+}
+
+model CareerCertification {
+  id                String    @id @default(cuid())
+  userId            String    @map("user_id")
+  pathwayId         String    @map("pathway_id")
+  certificateNumber String    @unique @map("certificate_number")
+  issuedAt          DateTime  @map("issued_at")
+  esiVerified       Boolean   @default(false) @map("esi_verified")
+  esiVerifiedAt     DateTime? @map("esi_verified_at")
+
+  pathway           CareerPathway @relation(fields: [pathwayId], references: [id])
+
+  @@map("career_certifications")
+}
+
+// ─── NOTIFICATIONS ───────────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  type      String
+  title     String
+  body      String
+  data      Json?
+  channel   String    @default("in_app")
+  isRead    Boolean   @default(false) @map("is_read")
+  sentAt    DateTime  @default(now()) @map("sent_at")
+  readAt    DateTime? @map("read_at")
+
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+// ─── PAYMENTS ────────────────────────────────────────
+
+model Payment {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  gateway          String
+  type             String
+  amount           Int
+  currency         String   @default("IDR")
+  status           String   @default("pending")
+  gatewayReference String?  @map("gateway_reference")
+  metadata         Json?
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@index([userId, status])
+  @@map("payments")
+}
+
+// ─── PARENT PORTAL ───────────────────────────────────
+
+model ParentLink {
+  id            String   @id @default(cuid())
+  parentUserId  String   @map("parent_user_id")
+  childUserId   String   @map("child_user_id")
+  consentGiven  Boolean  @default(false) @map("consent_given")
+  consentDate   DateTime? @map("consent_date")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@unique([parentUserId, childUserId])
+  @@map("parent_links")
+}
