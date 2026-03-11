@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 // Simulate current user tier
-const CURRENT_USER_TIER = "SILVER";
+const CURRENT_USER_TIER: string = "SILVER";
 
 const GAME_OPTIONS = [
   { value: "", label: "Tidak ada" },

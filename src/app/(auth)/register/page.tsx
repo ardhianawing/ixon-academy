@@ -310,7 +310,7 @@ export default function RegisterPage() {
               className="h-full rounded-full bg-gradient-to-r from-gold-dark to-gold"
               initial={false}
               animate={{ width: `${progressPercent}%` }}
-              transition={{ duration: 0.4, ease: "easeInOut" }}
+              transition={{ duration: 0.4, ease: "easeInOut" as const }}
             />
           </div>
         </div>

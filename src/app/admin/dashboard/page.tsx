@@ -155,7 +155,7 @@ export default function AdminDashboardPage() {
                   borderRadius: "8px",
                   color: "#fff",
                 }}
-                formatter={(value: number) => [`Rp ${value}jt`, "Revenue"]}
+                formatter={(value) => [`Rp ${value}jt`, "Revenue"]}
               />
               <Bar dataKey="revenue" fill="#D4A843" radius={[4, 4, 0, 0]} />
             </BarChart>

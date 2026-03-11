@@ -101,7 +101,7 @@ const REPLIES: Reply[] = [
 ];
 
 // Simulate current user tier
-const CURRENT_USER_TIER = "FREE";
+const CURRENT_USER_TIER: string = "FREE";
 
 function ReplyCard({ reply, depth = 0 }: { reply: Reply; depth?: number }) {
   return (

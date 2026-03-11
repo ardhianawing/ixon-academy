@@ -146,7 +146,7 @@ const POSTS: Post[] = [
 ];
 
 // Simulate current user tier — change to "FREE" to see the upgrade banner
-const CURRENT_USER_TIER = "FREE";
+const CURRENT_USER_TIER: string = "FREE";
 
 export default function CommunityPage() {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -177,16 +177,14 @@ export default function CommunityPage() {
         {isFreeUser ? (
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger asChild>
-                <span>
-                  <Button
-                    disabled
-                    className="bg-gold/40 text-[#0B1120] font-semibold cursor-not-allowed"
-                  >
-                    <Lock className="mr-2 h-4 w-4" />
-                    Buat Post
-                  </Button>
-                </span>
+              <TooltipTrigger>
+                <Button
+                  disabled
+                  className="bg-gold/40 text-[#0B1120] font-semibold cursor-not-allowed"
+                >
+                  <Lock className="mr-2 h-4 w-4" />
+                  Buat Post
+                </Button>
               </TooltipTrigger>
               <TooltipContent className="bg-[#1A2332] border-white/10 text-foreground">
                 <p>Upgrade ke Silver untuk membuat post</p>

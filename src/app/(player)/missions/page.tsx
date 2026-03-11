@@ -88,7 +88,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
@@ -152,7 +152,7 @@ function MissionProgressBar({ status }: { status: Mission["status"] }) {
       <motion.div
         initial={{ width: 0 }}
         animate={{ width: widthMap[status] }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
+        transition={{ duration: 0.8, ease: "easeOut" as const }}
         className={`h-full rounded-full ${colorMap[status]}`}
       />
     </div>
@@ -272,7 +272,7 @@ export default function MissionsPage() {
                 animate={{
                   width: `${(completedCount / totalMissions) * 100}%`,
                 }}
-                transition={{ duration: 1, ease: "easeOut" }}
+                transition={{ duration: 1, ease: "easeOut" as const }}
                 className="h-full rounded-full bg-gradient-to-r from-[#D4A843] to-[#B8922E]"
               />
             </div>
@@ -408,7 +408,7 @@ export default function MissionsPage() {
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: "40%" }}
-                  transition={{ duration: 1, ease: "easeOut", delay: 0.3 }}
+                  transition={{ duration: 1, ease: "easeOut" as const, delay: 0.3 }}
                   className="h-full rounded-full bg-gradient-to-r from-[#D4A843] to-[#B8922E]"
                 />
               </div>

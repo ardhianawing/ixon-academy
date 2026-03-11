@@ -3,7 +3,17 @@ import { NextResponse } from "next/server";
 
 const publicRoutes = ["/", "/login", "/register"];
 
-const roleRoutes: Record<string, string[]> = {
+// Home page per role
+const roleHome: Record<string, string> = {
+  COACH: "/coach/queue",
+  ADMIN: "/admin/dashboard",
+  SCOUTING: "/scouting/talent-board",
+  PARENT: "/parent/dashboard",
+  PLAYER: "/dashboard",
+};
+
+// Routes yang hanya boleh diakses role tertentu
+const restrictedPrefixes: Record<string, string[]> = {
   COACH: ["/coach"],
   ADMIN: ["/admin"],
   SCOUTING: ["/scouting"],
@@ -14,13 +24,21 @@ export default withAuth(
   function middleware(req) {
     const { pathname } = req.nextUrl;
     const token = req.nextauth.token;
+    const role = (token?.role as string) ?? "PLAYER";
 
-    // Check role-based routes
-    for (const [role, prefixes] of Object.entries(roleRoutes)) {
+    // Redirect /dashboard ke role home jika bukan PLAYER
+    if (pathname === "/dashboard" && role !== "PLAYER") {
+      const url = req.nextUrl.clone();
+      url.pathname = roleHome[role] ?? "/dashboard";
+      return NextResponse.redirect(url);
+    }
+
+    // Blokir akses ke route yang bukan milik role ini
+    for (const [allowedRole, prefixes] of Object.entries(restrictedPrefixes)) {
       for (const prefix of prefixes) {
-        if (pathname.startsWith(prefix) && token?.role !== role) {
+        if (pathname.startsWith(prefix) && role !== allowedRole) {
           const url = req.nextUrl.clone();
-          url.pathname = "/dashboard";
+          url.pathname = roleHome[role] ?? "/dashboard";
           return NextResponse.redirect(url);
         }
       }
@@ -32,36 +50,17 @@ export default withAuth(
     callbacks: {
       authorized({ req, token }) {
         const { pathname } = req.nextUrl;
-
-        // Allow public routes
-        if (publicRoutes.some((route) => pathname === route)) {
-          return true;
-        }
-
-        // Allow API auth routes
-        if (pathname.startsWith("/api/auth")) {
-          return true;
-        }
-
-        // All other routes require authentication
+        if (publicRoutes.some((route) => pathname === route)) return true;
+        if (pathname.startsWith("/api/auth")) return true;
         return !!token;
       },
     },
-    pages: {
-      signIn: "/login",
-    },
+    pages: { signIn: "/login" },
   }
 );
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * - _next/static (static files)
-     * - _next/image (image optimization)
-     * - favicon.ico
-     * - public files
-     */
     "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

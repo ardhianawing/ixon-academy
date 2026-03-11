@@ -77,7 +77,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 // ─── Star Rating Component ───────────────────────────────────────────────────
@@ -208,7 +208,7 @@ export default function ReviewDetailPage() {
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${s.pct}%` }}
-                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+                  transition={{ duration: 0.8, ease: "easeOut" as const, delay: 0.2 }}
                   className="h-full rounded-full"
                   style={{ backgroundColor: s.color }}
                 />

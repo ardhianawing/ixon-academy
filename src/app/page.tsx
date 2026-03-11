@@ -42,7 +42,7 @@ function FadeUp({
       initial={{ opacity: 0, y: 32 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.6, delay, ease: "easeOut" }}
+      transition={{ duration: 0.6, delay, ease: "easeOut" as const }}
       className={className}
     >
       {children}
@@ -70,7 +70,7 @@ function AnimatedCounter({
 
   useEffect(() => {
     if (inView) {
-      animate(motionVal, target, { duration, ease: "easeOut" });
+      animate(motionVal, target, { duration, ease: "easeOut" as const });
     }
   }, [inView, motionVal, target, duration]);
 

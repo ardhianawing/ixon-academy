@@ -77,7 +77,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 // ── Page Component ───────────────────────────────────────────────────────────
@@ -209,7 +209,7 @@ export default function MentalPage() {
               transition={{
                 duration: 0.4,
                 delay: index * 0.08,
-                ease: "easeOut",
+                ease: "easeOut" as const,
               }}
               className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/5 bg-[#1A2332] transition-all hover:border-white/10"
             >

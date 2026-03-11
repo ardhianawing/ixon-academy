@@ -87,7 +87,7 @@ const container = {
 
 const itemVariant = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 // ── Toggle Button Component ──────────────────────────────────────────────────
@@ -427,7 +427,7 @@ export default function WellnessPage() {
               transition={{
                 duration: 0.4,
                 delay: index * 0.08,
-                ease: "easeOut",
+                ease: "easeOut" as const,
               }}
               className="rounded-2xl border border-white/5 bg-[#1A2332] p-5 space-y-3"
             >

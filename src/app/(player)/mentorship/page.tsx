@@ -123,7 +123,7 @@ export default function MentorshipPage() {
           />
         </div>
 
-        <Select value={gameFilter} onValueChange={setGameFilter}>
+        <Select value={gameFilter} onValueChange={(v) => v && setGameFilter(v)}>
           <SelectTrigger className="w-full sm:w-[160px] bg-[#1A2332] border-gray-700 text-white">
             <Gamepad2 className="w-4 h-4 mr-2 text-gray-400" />
             <SelectValue placeholder="Game" />
@@ -135,7 +135,7 @@ export default function MentorshipPage() {
           </SelectContent>
         </Select>
 
-        <Select value={roleFilter} onValueChange={setRoleFilter}>
+        <Select value={roleFilter} onValueChange={(v) => v && setRoleFilter(v)}>
           <SelectTrigger className="w-full sm:w-[180px] bg-[#1A2332] border-gray-700 text-white">
             <Swords className="w-4 h-4 mr-2 text-gray-400" />
             <SelectValue placeholder="Spesialisasi" />
@@ -150,7 +150,7 @@ export default function MentorshipPage() {
           </SelectContent>
         </Select>
 
-        <Select value={availFilter} onValueChange={setAvailFilter}>
+        <Select value={availFilter} onValueChange={(v) => v && setAvailFilter(v)}>
           <SelectTrigger className="w-full sm:w-[180px] bg-[#1A2332] border-gray-700 text-white">
             <Filter className="w-4 h-4 mr-2 text-gray-400" />
             <SelectValue placeholder="Availability" />

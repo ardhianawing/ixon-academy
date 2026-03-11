@@ -151,7 +151,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 // ─── Page Component ───────────────────────────────────────────────────────────
@@ -196,7 +196,7 @@ export default function InviteTrialPage() {
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, ease: "easeOut" as const }}
           className="space-y-4"
         >
           <div className="size-16 rounded-2xl bg-emerald-500/15 flex items-center justify-center mx-auto">

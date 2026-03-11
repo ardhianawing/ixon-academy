@@ -1321,7 +1321,7 @@ MENTAL (4/5): Mentalmu cukup stabil sepanjang game. Bahkan saat tim tertinggal 3
         type: notif.type,
         title: notif.title,
         body: notif.body,
-        data: notif.data,
+        data: notif.data ?? undefined,
         isRead: notif.isRead,
         sentAt: notif.sentAt,
         readAt: notif.readAt ?? null,

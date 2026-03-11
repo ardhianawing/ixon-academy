@@ -5,7 +5,7 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Phone, Lock, Eye, EyeOff, LogIn } from "lucide-react";
+import { Phone, Lock, Eye, EyeOff, LogIn, Gamepad2, Shield, UserCog, Users, Search } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,7 +35,8 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Nomor HP atau password salah.");
       } else {
-        router.push("/dashboard");
+        router.push("/dashboard"); // middleware akan redirect sesuai role
+        router.refresh();
       }
     } catch {
       setError("Terjadi kesalahan. Silakan coba lagi.");
@@ -150,6 +151,56 @@ export default function LoginPage() {
               Daftar
             </Link>
           </p>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-[#1A2332] px-2 text-muted-foreground">Demo Login</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { phone: "demo-player", label: "Player", icon: Gamepad2, color: "text-blue-400" },
+              { phone: "demo-coach", label: "Coach", icon: Shield, color: "text-green-400" },
+              { phone: "demo-admin", label: "Admin", icon: UserCog, color: "text-purple-400" },
+              { phone: "demo-parent", label: "Parent", icon: Users, color: "text-orange-400" },
+              { phone: "demo-scout", label: "Scout", icon: Search, color: "text-cyan-400" },
+            ].map((demo) => (
+              <Button
+                key={demo.phone}
+                type="button"
+                variant="outline"
+                className="h-9 border-white/10 bg-white/5 hover:bg-white/10 text-sm"
+                onClick={async () => {
+                  setIsLoading(true);
+                  const result = await signIn("credentials", {
+                    phone: demo.phone,
+                    password: "demo",
+                    redirect: false,
+                  });
+                  if (!result?.error) {
+                    // Redirect ke home sesuai role
+                    const roleHome: Record<string, string> = {
+                      "demo-player": "/dashboard",
+                      "demo-coach": "/coach/queue",
+                      "demo-admin": "/admin/dashboard",
+                      "demo-parent": "/parent/dashboard",
+                      "demo-scout": "/scouting/talent-board",
+                    };
+                    router.push(roleHome[demo.phone] ?? "/dashboard");
+                    router.refresh();
+                  }
+                  setIsLoading(false);
+                }}
+              >
+                <demo.icon className={`mr-1.5 h-3.5 w-3.5 ${demo.color}`} />
+                {demo.label}
+              </Button>
+            ))}
+          </div>
         </form>
       </CardContent>
     </Card>

@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 
 // Mock: user tier — change to "SILVER" to see upgrade CTA
-const USER_TIER = "GOLD";
+const USER_TIER: string = "GOLD";
 
 const container = {
   hidden: { opacity: 0 },
@@ -22,7 +22,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 export default function SubmitGameplayPage() {

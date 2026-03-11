@@ -90,7 +90,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 function formatRupiah(n: number) {
@@ -168,7 +168,7 @@ export default function CoachWalletPage() {
                   fontSize: "12px",
                 }}
                 labelStyle={{ color: "rgba(255,255,255,0.5)" }}
-                formatter={(value: number) => [formatRupiah(value), "Pendapatan"]}
+                formatter={(value) => [formatRupiah(Number(value ?? 0)), "Pendapatan"]}
               />
               <Bar
                 dataKey="earning"

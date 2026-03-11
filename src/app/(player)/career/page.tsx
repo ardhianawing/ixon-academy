@@ -164,7 +164,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 // ── Pathway Card ─────────────────────────────────────────────────────────────
@@ -185,7 +185,7 @@ function PathwayCard({
     <motion.div
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
+      transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" as const }}
     >
       {/* @ts-expect-error polymorphic wrapper */}
       <CardWrapper

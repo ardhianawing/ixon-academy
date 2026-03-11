@@ -1,69 +1,47 @@
 services:
   app:
     build: .
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     depends_on:
       - postgres
       - redis
     env_file: .env
     volumes:
       - ./uploads:/app/uploads
-    restart: unless-stopped
-
-  worker:
-    build: .
-    command: node dist/workers/index.js
-    depends_on:
-      - postgres
-      - redis
-    env_file: .env
-    restart: unless-stopped
-
-  socketio:
-    build: .
-    command: node dist/socket/index.js
-    ports:
-      - "3001:3001"
-    depends_on:
-      - redis
-    env_file: .env
+    labels:
+      - "traefik.enable=false"
+    networks:
+      - traefik-network
+      - internal
     restart: unless-stopped
 
   postgres:
     image: postgres:16-alpine
-    ports:
-      - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
       POSTGRES_DB: ixon_academy
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+    networks:
+      - internal
     restart: unless-stopped
 
   redis:
     image: redis:7-alpine
-    ports:
-      - "6379:6379"
     volumes:
       - redisdata:/data
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./certbot:/etc/letsencrypt
-      - ./uploads:/var/www/uploads
-    depends_on:
-      - app
-      - socketio
+    networks:
+      - internal
     restart: unless-stopped
 
 volumes:
   pgdata:
   redisdata:
+
+networks:
+  traefik-network:
+    external: true
+  internal:
+    driver: bridge

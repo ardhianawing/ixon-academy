@@ -182,7 +182,7 @@ export default function AnalyticsPage() {
                 borderRadius: "8px",
                 color: "#fff",
               }}
-              formatter={(value: number) => [`${value}%`, "Retention"]}
+              formatter={(value) => [`${value}%`, "Retention"]}
             />
             <Area
               type="monotone"

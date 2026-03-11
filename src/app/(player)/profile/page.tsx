@@ -222,7 +222,7 @@ const container = {
 
 const item = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
@@ -248,7 +248,7 @@ function ScoreBar({
         <motion.div
           initial={{ width: 0 }}
           animate={{ width: `${(score / maxScore) * 100}%` }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.8, ease: "easeOut" as const }}
           className={`h-full rounded-full bg-gradient-to-r ${colorClass || "from-[#D4A843] to-[#B8922E]"}`}
         />
       </div>
@@ -462,7 +462,7 @@ export default function ProfilePage() {
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: "78%" }}
-                      transition={{ duration: 1, ease: "easeOut" }}
+                      transition={{ duration: 1, ease: "easeOut" as const }}
                       className="h-full rounded-full bg-gradient-to-r from-[#D4A843] to-[#B8922E]"
                     />
                     {/* Threshold marker */}
@@ -551,7 +551,7 @@ export default function ProfilePage() {
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${course.progress}%` }}
-                      transition={{ duration: 0.8, ease: "easeOut" }}
+                      transition={{ duration: 0.8, ease: "easeOut" as const }}
                       className="h-full rounded-full bg-gradient-to-r from-[#D4A843] to-[#B8922E]"
                     />
                   </div>

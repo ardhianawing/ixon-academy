@@ -296,7 +296,7 @@ export default function CourseDetailPage() {
                 className="h-full rounded-full bg-gradient-to-r from-[#D4A843] to-[#F0DCA0]"
                 initial={{ width: 0 }}
                 animate={{ width: `${course.progress}%` }}
-                transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" as const }}
               />
             </div>
           </div>
