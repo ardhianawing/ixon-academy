@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Bell, LogOut, Settings, User, ChevronRight, Shield, UserCog, Search, Users } from "lucide-react";
@@ -53,13 +54,16 @@ export function Navbar() {
       <div className="flex items-center justify-between h-full px-4 md:px-6">
 
         {/* Left: Logo */}
-        <Link href={roleHome[role]} className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center size-8 rounded-xl bg-gradient-to-br from-[#D4A843] to-[#A07D2E] shadow-[0_0_12px_rgba(212,168,67,0.4)]">
-            <span className="font-heading font-black text-[13px] text-[#0B1120]">IX</span>
+        <Link href={roleHome[role]} className="flex items-center">
+          <div className="relative h-9 w-36">
+            <Image
+              src="/ixon-academy-logo.png"
+              alt="IXON Academy"
+              fill
+              className="object-contain object-left"
+              priority
+            />
           </div>
-          <span className="font-heading font-bold text-[15px] text-foreground hidden sm:block">
-            IXON <span className="text-[#D4A843]">Academy</span>
-          </span>
         </Link>
 
         {/* Right: Actions */}

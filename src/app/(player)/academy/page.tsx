@@ -9,6 +9,7 @@ import {
   Lock,
   GraduationCap,
   Filter,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameBadge } from "@/components/ui/GameBadge";
@@ -149,6 +150,37 @@ function FilterPill({
   );
 }
 
+/* ──────────────────────── Filter Select (Mobile) ──────────────────────── */
+
+function FilterSelect<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: T[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="relative flex-1">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value as T)}
+        className="w-full appearance-none rounded-xl border border-white/10 bg-[#0B1120] px-3 py-2.5 pr-8 text-sm text-white outline-none focus:border-[#D4A843]/50"
+      >
+        {options.map((o) => (
+          <option key={o} value={o}>
+            {label}: {o}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 text-[#64748B]" />
+    </div>
+  );
+}
+
 /* ──────────────────────── Course Card ──────────────────────── */
 
 function CourseCard({ course, index }: { course: Course; index: number }) {
@@ -284,60 +316,49 @@ export default function AcademyPage() {
       </div>
 
       {/* Filters */}
-      <div className="space-y-3 rounded-2xl border border-white/8 bg-[#1A2332]/60 p-4">
-        <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#64748B]">
+      <div className="rounded-2xl border border-white/8 bg-[#1A2332]/60 p-4">
+        <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#64748B]">
           <Filter className="size-3.5" />
           Filter
         </div>
 
-        {/* Game filter */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[#64748B]">
-            Game
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {games.map((g) => (
-              <FilterPill
-                key={g}
-                label={g}
-                active={gameFilter === g}
-                onClick={() => setGameFilter(g)}
-              />
-            ))}
-          </div>
+        {/* Mobile: dropdowns */}
+        <div className="flex gap-2 sm:hidden">
+          <FilterSelect label="Game" value={gameFilter} options={games} onChange={setGameFilter} />
+          <FilterSelect label="Level" value={levelFilter} options={levels} onChange={setLevelFilter} />
+          <FilterSelect label="Kategori" value={categoryFilter} options={categories} onChange={setCategoryFilter} />
         </div>
 
-        {/* Level filter */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[#64748B]">
-            Level
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {levels.map((l) => (
-              <FilterPill
-                key={l}
-                label={l}
-                active={levelFilter === l}
-                onClick={() => setLevelFilter(l)}
-              />
-            ))}
+        {/* Desktop: pills */}
+        <div className="hidden sm:block space-y-3">
+          {/* Game filter */}
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-[#64748B]">Game</span>
+            <div className="flex flex-wrap gap-2">
+              {games.map((g) => (
+                <FilterPill key={g} label={g} active={gameFilter === g} onClick={() => setGameFilter(g)} />
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* Category filter */}
-        <div className="space-y-1.5">
-          <span className="text-[10px] font-medium uppercase tracking-wider text-[#64748B]">
-            Kategori
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {categories.map((c) => (
-              <FilterPill
-                key={c}
-                label={c}
-                active={categoryFilter === c}
-                onClick={() => setCategoryFilter(c)}
-              />
-            ))}
+          {/* Level filter */}
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-[#64748B]">Level</span>
+            <div className="flex flex-wrap gap-2">
+              {levels.map((l) => (
+                <FilterPill key={l} label={l} active={levelFilter === l} onClick={() => setLevelFilter(l)} />
+              ))}
+            </div>
+          </div>
+
+          {/* Category filter */}
+          <div className="space-y-1.5">
+            <span className="text-[10px] font-medium uppercase tracking-wider text-[#64748B]">Kategori</span>
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c) => (
+                <FilterPill key={c} label={c} active={categoryFilter === c} onClick={() => setCategoryFilter(c)} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
