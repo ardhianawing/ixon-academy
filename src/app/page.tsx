@@ -7,16 +7,16 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default function SplashPage() {
-  const audioRef = useRef<HTMLAudioElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [entered, setEntered] = useState(false);
   const [muted, setMuted] = useState(false);
 
   const handleEnter = () => {
-    const audio = audioRef.current;
-    if (audio) {
-      audio.volume = 0.5;
-      audio.play().catch(() => {});
-    }
+    // Buat Audio object langsung di click handler — paling reliable di iOS/Android
+    const audio = new Audio("/bumper-sound.mp3");
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
+    audioRef.current = audio;
     setEntered(true);
   };
 
@@ -29,8 +29,6 @@ export default function SplashPage() {
 
   return (
     <div className="relative min-h-screen bg-[#0B1120] flex flex-col items-center justify-center overflow-hidden">
-      <audio ref={audioRef} src="/bumper-sound.mp3" preload="auto" />
-
       {/* Background grid */}
       <div
         className="pointer-events-none absolute inset-0"
