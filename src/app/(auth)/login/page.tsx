@@ -163,11 +163,11 @@ export default function LoginPage() {
 
           <div className="grid grid-cols-2 gap-2">
             {[
-              { phone: "demo-player", label: "Player", icon: Gamepad2, color: "text-blue-400" },
-              { phone: "demo-coach", label: "Coach", icon: Shield, color: "text-green-400" },
-              { phone: "demo-admin", label: "Admin", icon: UserCog, color: "text-purple-400" },
-              { phone: "demo-parent", label: "Parent", icon: Users, color: "text-orange-400" },
-              { phone: "demo-scout", label: "Scout", icon: Search, color: "text-cyan-400" },
+              { phone: "+6281234567001", label: "Player", icon: Gamepad2, color: "text-blue-400", redirect: "/dashboard" },
+              { phone: "+6281234567010", label: "Coach", icon: Shield, color: "text-green-400", redirect: "/coach/queue" },
+              { phone: "+6281234567099", label: "Admin", icon: UserCog, color: "text-purple-400", redirect: "/admin/dashboard" },
+              { phone: "+6281234567006", label: "Parent", icon: Users, color: "text-orange-400", redirect: "/parent/dashboard" },
+              { phone: "+6281234567098", label: "Scout", icon: Search, color: "text-cyan-400", redirect: "/scouting/talent-board" },
             ].map((demo) => (
               <Button
                 key={demo.phone}
@@ -178,19 +178,11 @@ export default function LoginPage() {
                   setIsLoading(true);
                   const result = await signIn("credentials", {
                     phone: demo.phone,
-                    password: "demo",
+                    password: "ixon2026",
                     redirect: false,
                   });
                   if (!result?.error) {
-                    // Redirect ke home sesuai role
-                    const roleHome: Record<string, string> = {
-                      "demo-player": "/dashboard",
-                      "demo-coach": "/coach/queue",
-                      "demo-admin": "/admin/dashboard",
-                      "demo-parent": "/parent/dashboard",
-                      "demo-scout": "/scouting/talent-board",
-                    };
-                    router.push(roleHome[demo.phone] ?? "/dashboard");
+                    router.push(demo.redirect);
                     router.refresh();
                   }
                   setIsLoading(false);
