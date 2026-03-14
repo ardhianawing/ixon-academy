@@ -1,5 +1,7 @@
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
+import { prisma } from "./prisma";
 
 declare module "next-auth" {
   interface User {
@@ -33,38 +35,30 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        if (!credentials?.phone || !credentials?.password) {
-          return null;
-        }
+        if (!credentials?.phone || !credentials?.password) return null;
 
-        // Demo accounts
-        const demoAccounts: Record<string, { id: string; name: string; role: "PLAYER" | "COACH" | "ADMIN" | "SCOUTING" | "PARENT"; tier: "FREE" | "SILVER" | "GOLD" | "PLATINUM" }> = {
-          "demo-player": { id: "demo-player", name: "TENSAI", role: "PLAYER", tier: "GOLD" },
-          "demo-coach": { id: "demo-coach", name: "Coach Luminaire", role: "COACH", tier: "PLATINUM" },
-          "demo-admin": { id: "demo-admin", name: "Admin IXON", role: "ADMIN", tier: "PLATINUM" },
-          "demo-parent": { id: "demo-parent", name: "Bapak Andi", role: "PARENT", tier: "GOLD" },
-          "demo-scout": { id: "demo-scout", name: "Scout EVOS", role: "SCOUTING", tier: "PLATINUM" },
-        };
+        const user = await prisma.user.findUnique({
+          where: { phone: credentials.phone },
+        });
 
-        const demo = demoAccounts[credentials.phone];
-        if (demo) {
-          return { ...demo, phone: credentials.phone };
-        }
+        if (!user) return null;
 
-        // Fallback: accept any credentials as player
+        const valid = await bcrypt.compare(credentials.password, user.passwordHash);
+        if (!valid) return null;
+
         return {
-          id: "user-" + credentials.phone,
-          name: "IXON Player",
-          phone: credentials.phone,
-          role: "PLAYER" as const,
-          tier: "FREE" as const,
+          id: user.id,
+          name: user.namaAsli,
+          phone: user.phone,
+          role: user.role,
+          tier: user.tier,
         };
       },
     }),
   ],
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
   callbacks: {
     async jwt({ token, user }) {
@@ -79,7 +73,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       session.user = {
         id: token.id,
-        name: token.name ?? "IXON Player",
+        name: token.name ?? "",
         phone: token.phone,
         role: token.role,
         tier: token.tier,
@@ -90,5 +84,5 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: "/login",
   },
-  secret: process.env.NEXTAUTH_SECRET ?? "ixon-academy-dev-secret-key",
+  secret: process.env.NEXTAUTH_SECRET,
 };
