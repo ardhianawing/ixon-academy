@@ -67,6 +67,58 @@ Catatan sesi development untuk referensi session berikutnya.
 - **Schema push**: Kalau update schema, jalankan dari dalam container: `docker compose exec app npx prisma db push`
 - **Disk VPS**: Server 38GB, sempat penuh saat session ini. Rutin `docker builder prune -af` setelah build
 
+---
+
+## Session 2 — 2026-03-14: CI/CD + Seed Data
+
+### Yang Dikerjakan
+
+**CI/CD GitHub Actions:**
+- File: `.github/workflows/deploy.yml`
+- Trigger: push ke branch `main`
+- Flow: git pull → npm install (update lock) → docker compose build → docker compose up -d → image prune
+- Secrets yang harus ada di GitHub repo: `VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`
+- VPS perlu di-init sebagai git repo: `git init && git remote add origin ... && git fetch && git reset --hard origin/main`
+
+**Seed Data:**
+- Fix `prisma/seed.ts` pakai `PrismaPg` adapter (Prisma v7)
+- Tambah user SCOUTING (Scout EVOS)
+- Cara jalankan seed di production:
+  ```bash
+  docker run --rm \
+    --network ixon-academy_internal \
+    -v $(pwd):/app -w /app \
+    -e DATABASE_URL='postgresql://ixon_admin:IxonAcademy2026!@postgres:5432/ixon_academy' \
+    node:20-alpine \
+    sh -c 'npm install --silent && npx prisma generate && npx tsx prisma/seed.ts'
+  ```
+
+**Data yang terseed:**
+| Data | Jumlah |
+|------|--------|
+| Users | 9 (TENSAI, PhoenixBlade, ShadowFF, IXONReaper, AceHunter, Coach Alex, Admin IXON, Scout EVOS, Sari Parent) |
+| Games | 2 (MLBB, Free Fire) |
+| Players | 5 |
+| Courses | 6 (dengan modules, lessons, quizzes) |
+| Lessons | 46 |
+| Community Posts | 5 (dengan replies & reactions) |
+| Events | 3 |
+| Daily Missions | 12 |
+| Career Pathways | 3 |
+
+**Demo Accounts (semua password: `ixon2026`):**
+| Email | Role | Tier |
+|-------|------|------|
+| tensai@ixon.gg | PLAYER | GOLD |
+| phoenix@ixon.gg | PLAYER | PLATINUM |
+| shadow@ixon.gg | PLAYER | SILVER |
+| reaper@ixon.gg | PLAYER | GOLD |
+| ace@ixon.gg | PLAYER | GOLD |
+| coach.alex@ixon.gg | COACH | PLATINUM |
+| admin@ixon.gg | ADMIN | PLATINUM |
+| scout@ixon.gg | SCOUTING | PLATINUM |
+| sari.parent@ixon.gg | PARENT | GOLD |
+
 ### Belum Dikerjakan (Next Session)
 - [ ] `POST /api/auth/forgot-password`
 - [ ] `GET /api/user/reputation`
