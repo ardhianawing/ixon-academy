@@ -1,7 +1,10 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma";
 import bcrypt from "bcryptjs";
+import "dotenv/config";
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
   console.log("Seeding IXON Academy database...");
@@ -175,6 +178,20 @@ async function main() {
       email: "admin@ixon.gg",
       passwordHash,
       role: "ADMIN",
+      tier: "PLATINUM",
+      onboardingDone: true,
+      emailVerifiedAt: new Date("2025-01-01"),
+      phoneVerifiedAt: new Date("2025-01-01"),
+    },
+  });
+
+  const userScout = await prisma.user.create({
+    data: {
+      namaAsli: "Scout EVOS",
+      phone: "+6281234567098",
+      email: "scout@ixon.gg",
+      passwordHash,
+      role: "SCOUTING",
       tier: "PLATINUM",
       onboardingDone: true,
       emailVerifiedAt: new Date("2025-01-01"),
@@ -1395,7 +1412,7 @@ MENTAL (4/5): Mentalmu cukup stabil sepanjang game. Bahkan saat tim tertinggal 3
 
   console.log("Seeding completed successfully!");
   console.log("─────────────────────────────────────────");
-  console.log("Users created: 8 (5 players, 1 coach, 1 admin, 1 parent)");
+  console.log("Users created: 9 (5 players, 1 coach, 1 admin, 1 scout, 1 parent)");
   console.log("Games: 2 (MLBB, Free Fire)");
   console.log("Players: 5");
   console.log("Courses: 6 (with modules, lessons, quizzes)");
