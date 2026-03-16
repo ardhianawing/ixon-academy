@@ -337,7 +337,7 @@ export default function LeaderboardPage() {
         <motion.section variants={item}>
           <div className="rounded-2xl border border-white/5 bg-card overflow-hidden">
             {/* Table Header */}
-            <div className="grid grid-cols-[40px_1fr_80px_80px_90px] md:grid-cols-[50px_1fr_100px_100px_120px] gap-2 px-4 py-3 border-b border-white/5 text-xs font-semibold text-muted-foreground">
+            <div className="grid grid-cols-[32px_1fr_auto] md:grid-cols-[50px_1fr_100px_100px_120px] gap-2 px-4 py-3 border-b border-white/5 text-xs font-semibold text-muted-foreground">
               <span>#</span>
               <span>Player</span>
               <span className="hidden md:block">Rank</span>
@@ -355,7 +355,7 @@ export default function LeaderboardPage() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.4 + idx * 0.05 }}
                   className={`
-                    grid grid-cols-[40px_1fr_80px_80px_90px] md:grid-cols-[50px_1fr_100px_100px_120px] gap-2 px-4 py-3 items-center
+                    grid grid-cols-[32px_1fr_auto] md:grid-cols-[50px_1fr_100px_100px_120px] gap-2 px-4 py-3 items-center
                     hover:bg-white/[0.02] transition-colors
                     ${player.isCurrentUser ? "bg-[#D4A843]/5 border-l-2 border-l-[#D4A843]" : ""}
                     ${idx < rest.length - 1 ? "border-b border-white/5" : ""}

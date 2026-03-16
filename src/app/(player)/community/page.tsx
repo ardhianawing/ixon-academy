@@ -164,12 +164,12 @@ export default function CommunityPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-heading font-bold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-heading font-bold text-foreground">
             Komunitas
           </h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="hidden sm:block text-sm text-muted-foreground">
             Diskusi, sharing, dan belajar bareng sesama player
           </p>
         </div>
@@ -246,8 +246,8 @@ export default function CommunityPage() {
         ))}
       </div>
 
-      {/* Sort */}
-      <div className="flex gap-2">
+      {/* Sort — hidden on mobile, shown on desktop */}
+      <div className="hidden sm:flex gap-2">
         {SORT_OPTIONS.map((opt) => {
           const Icon = opt.icon;
           return (

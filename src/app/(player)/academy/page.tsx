@@ -10,6 +10,7 @@ import {
   GraduationCap,
   Filter,
   ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameBadge } from "@/components/ui/GameBadge";
@@ -183,6 +184,8 @@ function FilterSelect<T extends string>({
 
 /* ──────────────────────── Course Card ──────────────────────── */
 
+/* ──────────────────────── Course Card (Desktop grid) ──────────────────────── */
+
 function CourseCard({ course, index }: { course: Course; index: number }) {
   return (
     <motion.div
@@ -273,6 +276,63 @@ function CourseCard({ course, index }: { course: Course; index: number }) {
                 Belum dimulai
               </span>
             </div>
+          )}
+        </div>
+      </Link>
+    </motion.div>
+  );
+}
+
+/* ──────────────────────── Course Row (Mobile compact list) ──────────────────────── */
+
+function CourseRow({ course, index }: { course: Course; index: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, delay: index * 0.05, ease: "easeOut" as const }}
+    >
+      <Link
+        href={course.locked ? "#" : `/academy/${course.id}`}
+        className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${
+          course.locked
+            ? "cursor-not-allowed border-white/5 bg-[#1A2332]/60 opacity-60"
+            : "border-white/[0.06] bg-[#1A2332] active:bg-[#243044]"
+        }`}
+      >
+        {/* Emoji */}
+        <div className={`shrink-0 size-12 rounded-xl bg-gradient-to-br from-[#0B1120] to-[#1A2332] flex items-center justify-center text-2xl ${course.locked ? "relative" : ""}`}>
+          {course.locked ? (
+            <Lock className="size-5 text-[#94A3B8]" />
+          ) : (
+            course.emoji
+          )}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-semibold text-white truncate">{course.title}</h3>
+          <div className="flex items-center gap-2 mt-1">
+            {course.game !== "Cross-game" ? (
+              <GameBadge game={course.game} size="sm" />
+            ) : (
+              <span className="inline-flex items-center rounded-full bg-purple-500/15 px-1.5 py-0.5 text-[9px] font-semibold text-purple-400">Cross</span>
+            )}
+            <span className={`inline-flex items-center rounded-full px-1.5 py-0.5 text-[9px] font-semibold ${levelColors[course.level] ?? "bg-white/10 text-white/60"}`}>
+              {course.level}
+            </span>
+            <span className="text-[10px] text-[#64748B]">{course.lessons} lessons</span>
+          </div>
+        </div>
+
+        {/* Right: progress or status */}
+        <div className="shrink-0 text-right">
+          {course.progress !== null && course.progress > 0 ? (
+            <span className="text-sm font-bold text-[#D4A843]">{course.progress}%</span>
+          ) : course.locked ? (
+            <span className="text-[10px] text-[#94A3B8]">{course.lockedTier}+</span>
+          ) : (
+            <ChevronRight className="size-4 text-white/20" />
           )}
         </div>
       </Link>
@@ -386,13 +446,22 @@ export default function AcademyPage() {
         )}
       </div>
 
-      {/* Course Grid */}
+      {/* Course List (mobile) / Grid (desktop) */}
       {filtered.length > 0 ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filtered.map((course, i) => (
-            <CourseCard key={course.id} course={course} index={i} />
-          ))}
-        </div>
+        <>
+          {/* Mobile: compact list */}
+          <div className="space-y-2 sm:hidden">
+            {filtered.map((course, i) => (
+              <CourseRow key={course.id} course={course} index={i} />
+            ))}
+          </div>
+          {/* Desktop: card grid */}
+          <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map((course, i) => (
+              <CourseCard key={course.id} course={course} index={i} />
+            ))}
+          </div>
+        </>
       ) : (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-[#1A2332]/40 py-20">
           <BookOpen className="size-12 text-[#2A3A50]" />

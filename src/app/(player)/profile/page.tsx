@@ -331,19 +331,19 @@ export default function ProfilePage() {
                 className="max-w-md"
               />
 
-              {/* Quick stats */}
-              <div className="flex items-center gap-4 flex-wrap">
+              {/* Quick stats — compact on mobile */}
+              <div className="flex items-center gap-3 md:gap-4 flex-wrap">
                 {[
-                  { label: "Talent Score", value: "78", icon: Target, color: "text-[#D4A843]" },
-                  { label: "Streak", value: "7 hari", icon: Flame, color: "text-orange-400" },
+                  { label: "Talent", value: "78", icon: Target, color: "text-[#D4A843]" },
+                  { label: "Streak", value: "7d", icon: Flame, color: "text-orange-400" },
                   { label: "Badges", value: "4/8", icon: Award, color: "text-purple-400" },
                 ].map((stat) => (
                   <div
                     key={stat.label}
-                    className="flex items-center gap-2 text-sm"
+                    className="flex items-center gap-1.5 text-sm"
                   >
                     <stat.icon className={`size-4 ${stat.color}`} />
-                    <span className="text-muted-foreground">{stat.label}:</span>
+                    <span className="hidden sm:inline text-muted-foreground">{stat.label}:</span>
                     <span className="font-semibold text-foreground">
                       {stat.value}
                     </span>
@@ -381,7 +381,7 @@ export default function ProfilePage() {
                 <p className="text-xs text-muted-foreground mb-4">
                   5 area skill utama
                 </p>
-                <div className="w-full h-[260px]">
+                <div className="w-full h-[200px] md:h-[260px]">
                   <ResponsiveContainer width="100%" height="100%">
                     <RadarChart
                       cx="50%"
