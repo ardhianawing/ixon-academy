@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, AreaChart, Area, Tooltip,
@@ -41,9 +41,9 @@ const missions = [
 ];
 
 const quickActions = [
-  { label: "Lanjut Belajar", href: "/academy", icon: BookOpen, from: "from-blue-500", to: "to-blue-700", glow: "shadow-blue-500/30" },
-  { label: "Submit Gameplay", href: "/evaluation/submit", icon: Upload, from: "from-emerald-500", to: "to-emerald-700", glow: "shadow-emerald-500/30" },
-  { label: "Lihat Review", href: "/evaluation/history", icon: ClipboardList, from: "from-amber-500", to: "to-amber-700", glow: "shadow-amber-500/30" },
+  { label: "Belajar", href: "/academy", icon: BookOpen, from: "from-blue-500", to: "to-blue-700", glow: "shadow-blue-500/30" },
+  { label: "Submit", href: "/evaluation/submit", icon: Upload, from: "from-emerald-500", to: "to-emerald-700", glow: "shadow-emerald-500/30" },
+  { label: "Review", href: "/evaluation/history", icon: ClipboardList, from: "from-amber-500", to: "to-amber-700", glow: "shadow-amber-500/30" },
   { label: "Forum", href: "/community", icon: MessageSquare, from: "from-purple-500", to: "to-purple-700", glow: "shadow-purple-500/30" },
 ];
 
@@ -57,6 +57,47 @@ const activityFeed = [
 const upcomingEvents = [
   { id: 1, title: "IXON Weekly Scrim #12", date: "15 Mar", format: "5v5", slots: "24/32", minTier: "SILVER", gradient: "from-blue-600/20 to-blue-900/10" },
   { id: 2, title: "IXON Rookie Tournament S1", date: "22 Mar", format: "Tournament", slots: "12/16", minTier: "GOLD", gradient: "from-[#D4A843]/20 to-[#D4A843]/5" },
+];
+
+// ─── Highlight cards for mobile carousel ──────────────────────────────────────
+
+const highlightCards = [
+  {
+    id: "mission",
+    icon: Target,
+    iconColor: "text-emerald-400",
+    iconBg: "bg-emerald-500/15",
+    title: "Misi Harian",
+    subtitle: "1 dari 3 selesai",
+    accent: "Streak 7 hari",
+    accentColor: "text-orange-400",
+    href: "/missions",
+    gradient: "from-emerald-600/10 to-emerald-900/5",
+  },
+  {
+    id: "event",
+    icon: Trophy,
+    iconColor: "text-blue-400",
+    iconBg: "bg-blue-500/15",
+    title: "IXON Weekly Scrim #12",
+    subtitle: "15 Mar · 24/32 slot",
+    accent: "Daftar sekarang",
+    accentColor: "text-[#D4A843]",
+    href: "/events",
+    gradient: "from-blue-600/10 to-blue-900/5",
+  },
+  {
+    id: "review",
+    icon: Star,
+    iconColor: "text-amber-400",
+    iconBg: "bg-amber-500/15",
+    title: "Review Baru",
+    subtitle: "Coach Alex review gameplay #12",
+    accent: "Lihat hasil",
+    accentColor: "text-[#D4A843]",
+    href: "/evaluation/history",
+    gradient: "from-amber-600/10 to-amber-900/5",
+  },
 ];
 
 function getMidnightWIBCountdown() {
@@ -85,11 +126,22 @@ const fadeUp = {
 
 export default function DashboardPage() {
   const [countdown, setCountdown] = useState(getMidnightWIBCountdown());
+  const [highlightIndex, setHighlightIndex] = useState(0);
 
   useEffect(() => {
     const id = setInterval(() => setCountdown(getMidnightWIBCountdown()), 1_000);
     return () => clearInterval(id);
   }, []);
+
+  // Auto-rotate highlight cards on mobile
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHighlightIndex((prev) => (prev + 1) % highlightCards.length);
+    }, 5_000);
+    return () => clearInterval(id);
+  }, []);
+
+  const currentHighlight = highlightCards[highlightIndex];
 
   return (
     <div className="space-y-5">
@@ -116,7 +168,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div>
-                  <p className="text-xs text-white/50 mb-0.5">Selamat datang kembali 👋</p>
+                  <p className="text-xs text-white/50 mb-0.5">Selamat datang kembali</p>
                   <h1 className="font-heading font-black text-xl text-white leading-tight">TENSAI</h1>
                   <div className="flex items-center gap-1.5 mt-1">
                     <TierBadge tier="GOLD" size="sm" />
@@ -191,8 +243,54 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* ── Daily Missions ────────────────────────────────────────────── */}
-      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show">
+      {/* ── Mobile: Highlight Card (rotating) ─────────────────────────── */}
+      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="md:hidden">
+        <Link href={currentHighlight.href}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={currentHighlight.id}
+              initial={{ opacity: 0, x: 30 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -30 }}
+              transition={{ duration: 0.3 }}
+              className={`rounded-2xl bg-gradient-to-br ${currentHighlight.gradient} border border-white/10 p-4`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`shrink-0 size-10 rounded-xl ${currentHighlight.iconBg} flex items-center justify-center`}>
+                  <currentHighlight.icon className={`size-5 ${currentHighlight.iconColor}`} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-white truncate">{currentHighlight.title}</p>
+                  <p className="text-[11px] text-white/50 mt-0.5">{currentHighlight.subtitle}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <span className={`text-[11px] font-semibold ${currentHighlight.accentColor}`}>
+                    {currentHighlight.accent}
+                  </span>
+                  <ChevronRight className="size-4 text-white/30 ml-auto mt-0.5" />
+                </div>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </Link>
+        {/* Dot indicators */}
+        <div className="flex items-center justify-center gap-1.5 mt-2.5">
+          {highlightCards.map((card, i) => (
+            <button
+              key={card.id}
+              onClick={() => setHighlightIndex(i)}
+              className={`rounded-full transition-all ${
+                i === highlightIndex
+                  ? "w-5 h-1.5 bg-[#D4A843]"
+                  : "w-1.5 h-1.5 bg-white/20"
+              }`}
+            />
+          ))}
+        </div>
+      </motion.div>
+
+      {/* ── Desktop: Daily Missions (hidden on mobile) ────────────────── */}
+      <motion.div custom={2} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-heading font-bold text-white text-base flex items-center gap-2">
             <Target className="size-4 text-[#D4A843]" />
@@ -248,8 +346,8 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* ── Talent Radar ─────────────────────────────────────────────── */}
-      <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show">
+      {/* ── Desktop: Talent Radar (hidden on mobile) ──────────────────── */}
+      <motion.div custom={3} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block">
         <div className="rounded-2xl bg-[#1A2332] border border-white/[0.06] p-4">
           <div className="flex items-center justify-between mb-1">
             <h2 className="font-heading font-bold text-white text-base">Skill Radar</h2>
@@ -271,8 +369,8 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* ── Score Trend ──────────────────────────────────────────────── */}
-      <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show">
+      {/* ── Desktop: Score Trend (hidden on mobile) ───────────────────── */}
+      <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block">
         <div className="rounded-2xl bg-[#1A2332] border border-white/[0.06] p-4">
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -308,8 +406,8 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* ── Events ────────────────────────────────────────────────────── */}
-      <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show">
+      {/* ── Desktop: Events (hidden on mobile) ────────────────────────── */}
+      <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-heading font-bold text-white text-base flex items-center gap-2">
             <Trophy className="size-4 text-[#D4A843]" />
@@ -346,8 +444,8 @@ export default function DashboardPage() {
         </div>
       </motion.div>
 
-      {/* ── Recent Activity ───────────────────────────────────────────── */}
-      <motion.div custom={6} variants={fadeUp} initial="hidden" animate="show" className="pb-2">
+      {/* ── Desktop: Recent Activity (hidden on mobile) ────────────────── */}
+      <motion.div custom={6} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block pb-2">
         <h2 className="font-heading font-bold text-white text-base mb-3 flex items-center gap-2">
           <Zap className="size-4 text-[#D4A843]" />
           Aktivitas Terbaru
