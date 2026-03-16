@@ -93,48 +93,44 @@ export default function ReviewHistoryPage() {
           return (
             <motion.div key={sub.id} variants={item}>
               <Link href={`/evaluation/${sub.id}`}>
-                <div className="rounded-xl border border-white/5 bg-card p-5 hover:border-white/10 hover:bg-white/[0.02] transition-all group">
-                  <div className="flex items-center justify-between">
-                    {/* Left info */}
-                    <div className="flex items-center gap-4 min-w-0">
-                      {/* Hero avatar placeholder */}
-                      <div className="size-12 rounded-xl bg-gradient-to-br from-[#D4A843]/20 to-[#D4A843]/5 flex items-center justify-center shrink-0">
-                        <span className="text-lg font-bold text-[#D4A843]">
-                          {sub.hero[0]}
+                <div className="rounded-xl border border-white/5 bg-card p-4 hover:border-white/10 hover:bg-white/[0.02] transition-all group">
+                  <div className="flex items-center gap-3">
+                    {/* Hero avatar */}
+                    <div className="size-11 rounded-xl bg-gradient-to-br from-[#D4A843]/20 to-[#D4A843]/5 flex items-center justify-center shrink-0">
+                      <span className="text-base font-bold text-[#D4A843]">
+                        {sub.hero[0]}
+                      </span>
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-sm text-foreground truncate">
+                          {sub.hero}
+                        </h3>
+                        <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-blue-500/15 text-blue-400 shrink-0">
+                          {sub.game}
                         </span>
                       </div>
-
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-foreground">
-                            {sub.hero}
-                          </h3>
-                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">
-                            {sub.game}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                          <span>{sub.date}</span>
-                          {sub.coach && (
-                            <>
-                              <span className="text-white/10">|</span>
-                              <span>{sub.coach}</span>
-                            </>
-                          )}
-                        </div>
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-muted-foreground">
+                        <span>{sub.date}</span>
+                        {sub.coach && (
+                          <>
+                            <span className="text-white/10">·</span>
+                            <span className="truncate">{sub.coach}</span>
+                          </>
+                        )}
                       </div>
                     </div>
 
-                    {/* Right: status + chevron */}
-                    <div className="flex items-center gap-3 shrink-0">
-                      <span
-                        className={`flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-full ${st.cls}`}
-                      >
-                        <StatusIcon className={`size-3 ${sub.status === "in-review" ? "animate-spin" : ""}`} />
-                        {st.label}
-                      </span>
-                      <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />
-                    </div>
+                    {/* Status + chevron */}
+                    <span
+                      className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${st.cls}`}
+                    >
+                      <StatusIcon className={`size-3 ${sub.status === "in-review" ? "animate-spin" : ""}`} />
+                      {st.label}
+                    </span>
+                    <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors shrink-0" />
                   </div>
                 </div>
               </Link>
