@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { use, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Play,
@@ -12,7 +12,10 @@ import {
   AlertTriangle,
   CheckCircle2,
   FileText,
+  Loader2,
 } from "lucide-react";
+
+import { useCoachReviewData } from "@/hooks/useCoachReviewData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -21,26 +24,6 @@ interface RubricScore {
   value: number;
   comment: string;
 }
-
-// ─── Mock Submission Data ─────────────────────────────────────────────────────
-
-const submission = {
-  player: "TENSAI",
-  hero: "Hayabusa",
-  game: "MLBB",
-  matchContext: "Ranked",
-  url: "https://youtube.com/watch?v=example123",
-  description:
-    "Tolong review gameplay jungler saya, terutama di bagian early game pathing dan timing retribution saat objective.",
-};
-
-const rubricLabels = [
-  "Mechanical Skill",
-  "Game Sense",
-  "Hero Mastery",
-  "Teamwork",
-  "Mental",
-];
 
 // ─── Animation ────────────────────────────────────────────────────────────────
 
@@ -56,11 +39,22 @@ const item = {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ReviewInterfacePage() {
+export default function ReviewInterfacePage({
+  params,
+}: {
+  params: Promise<{ submissionId: string }>;
+}) {
+  const { submissionId } = use(params);
+  const { data, loading } = useCoachReviewData(submissionId);
+
   // Rubric scores
   const [rubrics, setRubrics] = useState<RubricScore[]>(
-    rubricLabels.map((label) => ({ label, value: 3, comment: "" }))
+    data.rubricLabels.map((label) => ({ label, value: 3, comment: "" }))
   );
+
+  useEffect(() => {
+    setRubrics(data.rubricLabels.map((label) => ({ label, value: 3, comment: "" })));
+  }, [data.rubricLabels]);
 
   // Feedback
   const [feedback, setFeedback] = useState("");
@@ -109,6 +103,16 @@ export default function ReviewInterfacePage() {
       next[idx] = val;
       return next;
     });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  const { submission } = data;
 
   return (
     <motion.div

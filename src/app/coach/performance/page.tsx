@@ -16,31 +16,10 @@ import {
   FileCheck,
   TrendingUp,
   Users,
+  Loader2,
 } from "lucide-react";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const cqsScore = 4.2;
-const breakdown = [
-  { label: "Player Rating", score: 4.5, weight: 0.5, weighted: 2.25 },
-  { label: "Rubrik Completeness", score: 4.0, weight: 0.3, weighted: 1.2 },
-  { label: "Audit Score", score: 3.8, weight: 0.2, weighted: 0.76 },
-];
-
-const ratingDistribution = [
-  { rating: "5 Star", count: 22 },
-  { rating: "4 Star", count: 15 },
-  { rating: "3 Star", count: 7 },
-  { rating: "2 Star", count: 2 },
-  { rating: "1 Star", count: 1 },
-];
-
-const stats = [
-  { label: "Total Reviews", value: "47", icon: FileCheck, color: "text-blue-400", bg: "bg-blue-500/10" },
-  { label: "Avg Review Time", value: "22 min", icon: Clock, color: "text-amber-400", bg: "bg-amber-500/10" },
-  { label: "Active Players", value: "31", icon: Users, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-  { label: "This Month", value: "12", icon: TrendingUp, color: "text-purple-400", bg: "bg-purple-500/10" },
-];
+import { useCoachPerformanceData } from "@/hooks/useCoachPerformanceData";
 
 // ─── Animation ────────────────────────────────────────────────────────────────
 
@@ -54,6 +33,14 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
+const statIcons = [FileCheck, Clock, Users, TrendingUp];
+const statColors = [
+  { color: "text-blue-400", bg: "bg-blue-500/10" },
+  { color: "text-amber-400", bg: "bg-amber-500/10" },
+  { color: "text-emerald-400", bg: "bg-emerald-500/10" },
+  { color: "text-purple-400", bg: "bg-purple-500/10" },
+];
+
 function getCQSColor(score: number) {
   if (score >= 4.0) return "text-emerald-400";
   if (score >= 3.0) return "text-amber-400";
@@ -61,6 +48,16 @@ function getCQSColor(score: number) {
 }
 
 export default function CoachPerformancePage() {
+  const { data, loading } = useCoachPerformanceData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <motion.div
       variants={container}
@@ -88,8 +85,8 @@ export default function CoachPerformancePage() {
           {/* Main Score */}
           <div className="flex items-center gap-4 shrink-0">
             <div className="size-24 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-emerald-600/5 border border-emerald-500/20 flex items-center justify-center">
-              <span className={`font-heading font-bold text-4xl ${getCQSColor(cqsScore)}`}>
-                {cqsScore}
+              <span className={`font-heading font-bold text-4xl ${getCQSColor(data.cqsScore)}`}>
+                {data.cqsScore}
               </span>
             </div>
             <div>
@@ -107,7 +104,7 @@ export default function CoachPerformancePage() {
 
           {/* Breakdown */}
           <div className="flex-1 space-y-3">
-            {breakdown.map((b) => (
+            {data.breakdown.map((b) => (
               <div key={b.label} className="space-y-1">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-foreground">{b.label}</span>
@@ -134,22 +131,26 @@ export default function CoachPerformancePage() {
 
       {/* Stats Grid */}
       <motion.div variants={item} className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {stats.map((st) => (
-          <div
-            key={st.label}
-            className="rounded-xl border border-white/5 bg-card p-4 flex flex-col items-center text-center gap-2"
-          >
+        {data.stats.map((st, idx) => {
+          const Icon = statIcons[idx] ?? FileCheck;
+          const colors = statColors[idx] ?? statColors[0];
+          return (
             <div
-              className={`size-10 rounded-xl ${st.bg} flex items-center justify-center`}
+              key={st.label}
+              className="rounded-xl border border-white/5 bg-card p-4 flex flex-col items-center text-center gap-2"
             >
-              <st.icon className={`size-5 ${st.color}`} />
+              <div
+                className={`size-10 rounded-xl ${colors.bg} flex items-center justify-center`}
+              >
+                <Icon className={`size-5 ${colors.color}`} />
+              </div>
+              <p className="font-heading font-bold text-xl text-foreground">
+                {st.value}
+              </p>
+              <p className="text-xs text-muted-foreground">{st.label}</p>
             </div>
-            <p className="font-heading font-bold text-xl text-foreground">
-              {st.value}
-            </p>
-            <p className="text-xs text-muted-foreground">{st.label}</p>
-          </div>
-        ))}
+          );
+        })}
       </motion.div>
 
       {/* Rating Distribution Chart */}
@@ -163,7 +164,7 @@ export default function CoachPerformancePage() {
         </h2>
         <div className="h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={ratingDistribution} layout="vertical">
+            <BarChart data={data.ratingDistribution} layout="vertical">
               <XAxis
                 type="number"
                 tick={{ fill: "rgba(255,255,255,0.3)", fontSize: 11 }}

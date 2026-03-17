@@ -22,57 +22,20 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { useBecomeCoachData } from "@/hooks/useBecomeCoachData";
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Icon Map ───────────────────────────────────────────────────────────────
 
-const BENEFITS = [
-  {
-    icon: DollarSign,
-    title: "Penghasilan Fleksibel",
-    desc: "Tetapkan tarif coaching sendiri dan terima pembayaran langsung.",
-  },
-  {
-    icon: Users,
-    title: "Jangkau Ribuan Pemain",
-    desc: "Akses ke komunitas IXON Academy yang terus berkembang.",
-  },
-  {
-    icon: Award,
-    title: "Bangun Reputasi",
-    desc: "Tingkatkan kredibilitas dengan badge Coach Verified.",
-  },
-];
-
-const REQUIREMENTS = [
-  "Minimal rank Mythic di MLBB atau setara di game lain",
-  "Pengalaman bermain kompetitif atau coaching minimal 1 tahun",
-  "Mampu berkomunikasi dengan baik dalam Bahasa Indonesia",
-  "Bersedia menyelesaikan sample review sebagai bagian dari aplikasi",
-  "Memiliki perangkat yang memadai untuk sesi coaching online",
-];
-
-const STEPS = ["Info Pribadi", "Keahlian Game", "Pengalaman", "Sample Review"];
-
-const MOCK_GAMEPLAY = {
-  player: "SilverFox_ID",
-  rank: "Legend II",
-  hero: "Ling",
-  role: "Jungler",
-  match: "Ranked — Kalah 8-15 (25:32)",
-  notes:
-    "Early game farming lambat, missed 2 turtle, tidak join teamfight mid-game, build tidak optimal untuk lawan yang tanky.",
+const BENEFIT_ICON_MAP: Record<string, React.ElementType> = {
+  DollarSign,
+  Users,
+  Award,
 };
-
-const RUBRIC = [
-  "Mekanik (1-10): Skill usage, combo execution",
-  "Game Sense (1-10): Map awareness, objective control",
-  "Decision Making (1-10): Positioning, timing engage",
-  "Saran Perbaikan: minimal 3 poin actionable",
-];
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function BecomeCoachPage() {
+  const { data, loading } = useBecomeCoachData();
   const [step, setStep] = useState(0); // 0 = landing, 1-4 = form steps, 5 = success
   const [formData, setFormData] = useState({
     nama: "Ahmad Tensai",
@@ -85,6 +48,16 @@ export default function BecomeCoachPage() {
     experience: "",
     sampleReview: "",
   });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  const { benefits, requirements, steps: STEPS, mockGameplay, rubric } = data;
 
   const updateField = (key: string, value: string) => {
     setFormData((prev) => ({ ...prev, [key]: value }));
@@ -110,8 +83,8 @@ export default function BecomeCoachPage() {
 
         {/* Benefits */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {BENEFITS.map((b, i) => {
-            const Icon = b.icon;
+          {benefits.map((b, i) => {
+            const Icon = BENEFIT_ICON_MAP[b.iconName] || Trophy;
             return (
               <motion.div
                 key={b.title}
@@ -144,7 +117,7 @@ export default function BecomeCoachPage() {
               <Target className="h-5 w-5 text-[#D4A843]" /> Persyaratan
             </h2>
             <ul className="space-y-2">
-              {REQUIREMENTS.map((req, i) => (
+              {requirements.map((req, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
                   <CheckCircle2 className="h-4 w-4 text-[#D4A843] mt-0.5 shrink-0" />
                   {req}
@@ -366,28 +339,28 @@ export default function BecomeCoachPage() {
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
                     <span className="text-gray-500">Player:</span>{" "}
-                    <span className="text-white">{MOCK_GAMEPLAY.player}</span>
+                    <span className="text-white">{mockGameplay.player}</span>
                   </div>
                   <div>
                     <span className="text-gray-500">Rank:</span>{" "}
-                    <span className="text-white">{MOCK_GAMEPLAY.rank}</span>
+                    <span className="text-white">{mockGameplay.rank}</span>
                   </div>
                   <div>
                     <span className="text-gray-500">Hero:</span>{" "}
-                    <span className="text-white">{MOCK_GAMEPLAY.hero}</span>
+                    <span className="text-white">{mockGameplay.hero}</span>
                   </div>
                   <div>
                     <span className="text-gray-500">Role:</span>{" "}
-                    <span className="text-white">{MOCK_GAMEPLAY.role}</span>
+                    <span className="text-white">{mockGameplay.role}</span>
                   </div>
                 </div>
                 <div className="text-xs">
                   <span className="text-gray-500">Match:</span>{" "}
-                  <span className="text-white">{MOCK_GAMEPLAY.match}</span>
+                  <span className="text-white">{mockGameplay.match}</span>
                 </div>
                 <div className="text-xs">
                   <span className="text-gray-500">Catatan:</span>{" "}
-                  <span className="text-gray-300">{MOCK_GAMEPLAY.notes}</span>
+                  <span className="text-gray-300">{mockGameplay.notes}</span>
                 </div>
               </div>
 
@@ -397,7 +370,7 @@ export default function BecomeCoachPage() {
                   Rubrik Penilaian
                 </h3>
                 <ul className="space-y-1">
-                  {RUBRIC.map((r, i) => (
+                  {rubric.map((r, i) => (
                     <li key={i} className="text-xs text-gray-300 flex items-start gap-1.5">
                       <Star className="h-3 w-3 text-[#D4A843] mt-0.5 shrink-0" />
                       {r}

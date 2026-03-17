@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -13,96 +13,14 @@ import {
   Target,
   Brain,
   Flame,
+  Loader2,
 } from "lucide-react";
 
 import { GameBadge } from "@/components/ui/GameBadge";
 import { TalentScoreCircle } from "@/components/ui/TalentScoreCircle";
+import { useScoutingData, type ScoutingPlayer } from "@/hooks/useScoutingData";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface Player {
-  id: string;
-  nickname: string;
-  avatar: string;
-  game: string;
-  rank: string;
-  role: string;
-  talentScore: number;
-  skill: number;
-  mindset: number;
-  commitment: number;
-  shortlisted: boolean;
-}
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const initialPlayers: Player[] = [
-  {
-    id: "phoenix-blade",
-    nickname: "PhoenixBlade",
-    avatar: "PB",
-    game: "MLBB",
-    rank: "Mythical Honor",
-    role: "Gold Laner",
-    talentScore: 87,
-    skill: 90,
-    mindset: 85,
-    commitment: 82,
-    shortlisted: true,
-  },
-  {
-    id: "tensai",
-    nickname: "TENSAI",
-    avatar: "TS",
-    game: "MLBB",
-    rank: "Mythical Glory",
-    role: "Jungler",
-    talentScore: 78,
-    skill: 82,
-    mindset: 75,
-    commitment: 72,
-    shortlisted: false,
-  },
-  {
-    id: "ixon-reaper",
-    nickname: "IXONReaper",
-    avatar: "IR",
-    game: "MLBB",
-    rank: "Mythic",
-    role: "EXP Laner",
-    talentScore: 72,
-    skill: 70,
-    mindset: 78,
-    commitment: 68,
-    shortlisted: false,
-  },
-  {
-    id: "shadow-ff",
-    nickname: "ShadowFF",
-    avatar: "SF",
-    game: "FF",
-    rank: "Grandmaster",
-    role: "Rusher",
-    talentScore: 65,
-    skill: 60,
-    mindset: 70,
-    commitment: 65,
-    shortlisted: false,
-  },
-  {
-    id: "ace-hunter",
-    nickname: "AceHunter",
-    avatar: "AH",
-    game: "MLBB",
-    rank: "Legend",
-    role: "Roamer",
-    talentScore: 45,
-    skill: 40,
-    mindset: 55,
-    commitment: 42,
-    shortlisted: false,
-  },
-];
+// ─── Constants ───────────────────────────────────────────────────────────────
 
 const SCOUTING_THRESHOLD = 85;
 
@@ -143,14 +61,6 @@ function SignalBar({
   );
 }
 
-// ─── Score Color ──────────────────────────────────────────────────────────────
-
-function getScoreColor(score: number) {
-  if (score >= 85) return "text-emerald-400";
-  if (score >= 70) return "text-amber-400";
-  return "text-red-400";
-}
-
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
 const container = {
@@ -166,12 +76,17 @@ const item = {
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function TalentBoardPage() {
-  const [players, setPlayers] = useState<Player[]>(initialPlayers);
+  const { data, loading } = useScoutingData();
+  const [players, setPlayers] = useState<ScoutingPlayer[]>(data.players);
   const [activeTab, setActiveTab] = useState<"all" | "shortlist">("all");
   const [gameFilter, setGameFilter] = useState<string>("All");
   const [rankFilter, setRankFilter] = useState<string>("All");
   const [roleFilter, setRoleFilter] = useState<string>("All");
   const [scoreRange, setScoreRange] = useState<number>(0);
+
+  useEffect(() => {
+    setPlayers(data.players);
+  }, [data.players]);
 
   const toggleShortlist = (id: string) => {
     setPlayers((prev) =>
@@ -204,8 +119,16 @@ export default function TalentBoardPage() {
     return result.sort((a, b) => b.talentScore - a.talentScore);
   }, [players, activeTab, gameFilter, rankFilter, roleFilter, scoreRange]);
 
-  const uniqueRanks = [...new Set(initialPlayers.map((p) => p.rank))];
-  const uniqueRoles = [...new Set(initialPlayers.map((p) => p.role))];
+  const uniqueRanks = [...new Set(data.players.map((p) => p.rank))];
+  const uniqueRoles = [...new Set(data.players.map((p) => p.role))];
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <motion.div

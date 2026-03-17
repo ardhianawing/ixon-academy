@@ -9,58 +9,14 @@ import {
   Shirt,
   Headphones,
   Tag,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useMarketplaceData } from "@/hooks/useMarketplaceData";
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-type ProductCategory = "voucher" | "merchandise" | "coaching";
-
-interface Product {
-  id: string;
-  emoji: string;
-  title: string;
-  price: number;
-  category: ProductCategory;
-  description: string;
-}
-
-const products: Product[] = [
-  {
-    id: "v1",
-    emoji: "🎮",
-    title: "Voucher MLBB 100 Diamond",
-    price: 25000,
-    category: "voucher",
-    description: "Top up 100 diamond langsung ke akun MLBB kamu",
-  },
-  {
-    id: "v2",
-    emoji: "🎮",
-    title: "Voucher MLBB 500 Diamond",
-    price: 115000,
-    category: "voucher",
-    description: "Top up 500 diamond langsung ke akun MLBB kamu",
-  },
-  {
-    id: "m1",
-    emoji: "👕",
-    title: "Jersey IXON Esport 2026",
-    price: 250000,
-    category: "merchandise",
-    description: "Jersey eksklusif IXON edisi 2026 — breathable fabric",
-  },
-  {
-    id: "c1",
-    emoji: "🎧",
-    title: "Coaching 1-on-1 (30 min)",
-    price: 150000,
-    category: "coaching",
-    description: "Sesi coaching privat bersama coach profesional",
-  },
-];
+// ─── Constants ──────────────────────────────────────────────────────────────
 
 const FILTERS = [
   { key: "semua", label: "Semua", icon: Tag },
@@ -80,7 +36,16 @@ function formatRupiah(n: number) {
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function MarketplacePage() {
+  const { data: products, loading } = useMarketplaceData();
   const [activeFilter, setActiveFilter] = useState<string>("semua");
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   const filtered =
     activeFilter === "semua"

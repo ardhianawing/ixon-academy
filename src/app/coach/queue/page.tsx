@@ -13,43 +13,7 @@ import {
   Gamepad2,
 } from "lucide-react";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const stats = [
-  { label: "Total Queue", value: 5, icon: Inbox, color: "text-[#D4A843]", bg: "bg-[#D4A843]/10" },
-  { label: "In Review", value: 1, icon: Loader2, color: "text-blue-400", bg: "bg-blue-500/10" },
-  { label: "Completed Today", value: 3, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
-];
-
-const initialQueue = [
-  {
-    id: "sub-001",
-    player: "TENSAI",
-    game: "MLBB",
-    hero: "Hayabusa",
-    timeAgo: "2 jam lalu",
-    slaSeconds: 78300, // 21:45:00
-    urgent: false,
-  },
-  {
-    id: "sub-002",
-    player: "IXONReaper",
-    game: "MLBB",
-    hero: "Chou",
-    timeAgo: "5 jam lalu",
-    slaSeconds: 66600, // 18:30:00
-    urgent: false,
-  },
-  {
-    id: "sub-003",
-    player: "ShadowFF",
-    game: "FF",
-    hero: "Chrono",
-    timeAgo: "1 hari lalu",
-    slaSeconds: 8100, // 02:15:00
-    urgent: true,
-  },
-];
+import { useCoachQueueData, type CoachQueueItem } from "@/hooks/useCoachQueueData";
 
 // ─── Animation ────────────────────────────────────────────────────────────────
 
@@ -63,6 +27,13 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: "easeOut" as const } },
 };
 
+const statIcons = [Inbox, Loader2, CheckCircle2];
+const statColors = [
+  { color: "text-[#D4A843]", bg: "bg-[#D4A843]/10" },
+  { color: "text-blue-400", bg: "bg-blue-500/10" },
+  { color: "text-emerald-400", bg: "bg-emerald-500/10" },
+];
+
 function formatSLA(totalSeconds: number) {
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
@@ -71,7 +42,12 @@ function formatSLA(totalSeconds: number) {
 }
 
 export default function CoachQueuePage() {
-  const [queue, setQueue] = useState(initialQueue);
+  const { data, loading } = useCoachQueueData();
+  const [queue, setQueue] = useState<CoachQueueItem[]>(data.queue);
+
+  useEffect(() => {
+    setQueue(data.queue);
+  }, [data.queue]);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -85,6 +61,14 @@ export default function CoachQueuePage() {
     }, 1000);
     return () => clearInterval(id);
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <motion.div
@@ -106,22 +90,26 @@ export default function CoachQueuePage() {
 
       {/* Stats Bar */}
       <motion.div variants={item} className="grid grid-cols-3 gap-3">
-        {stats.map((st) => (
-          <div
-            key={st.label}
-            className="rounded-xl border border-white/5 bg-card p-4 flex items-center gap-3"
-          >
-            <div className={`size-10 rounded-xl ${st.bg} flex items-center justify-center shrink-0`}>
-              <st.icon className={`size-5 ${st.color}`} />
+        {data.stats.map((st, idx) => {
+          const Icon = statIcons[idx] ?? Inbox;
+          const colors = statColors[idx] ?? statColors[0];
+          return (
+            <div
+              key={st.label}
+              className="rounded-xl border border-white/5 bg-card p-4 flex items-center gap-3"
+            >
+              <div className={`size-10 rounded-xl ${colors.bg} flex items-center justify-center shrink-0`}>
+                <Icon className={`size-5 ${colors.color}`} />
+              </div>
+              <div>
+                <p className="font-heading font-bold text-xl text-foreground">
+                  {st.value}
+                </p>
+                <p className="text-xs text-muted-foreground">{st.label}</p>
+              </div>
             </div>
-            <div>
-              <p className="font-heading font-bold text-xl text-foreground">
-                {st.value}
-              </p>
-              <p className="text-xs text-muted-foreground">{st.label}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </motion.div>
 
       {/* Queue List */}

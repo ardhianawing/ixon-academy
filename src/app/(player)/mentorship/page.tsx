@@ -11,6 +11,7 @@ import {
   Gamepad2,
   Swords,
   Users,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -23,64 +24,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const mentors = [
-  {
-    id: "rrq-lemon",
-    nickname: "RRQ Lemon",
-    realName: "Muhammad Ikhsan",
-    exTeam: "RRQ Hoshi",
-    role: "Jungler",
-    yearsExp: 5,
-    rating: 4.8,
-    totalReviews: 124,
-    available: true,
-    bio: "Legenda Jungler Indonesia. Spesialis rotasi dan timing objektif.",
-    specializations: ["Jungling", "Rotasi Map", "Objektif"],
-    initial: "RL",
-    color: "from-red-500 to-orange-500",
-  },
-  {
-    id: "evos-wannn",
-    nickname: "EVOS Wannn",
-    realName: "Muhammad Ridwan",
-    exTeam: "EVOS Legends",
-    role: "Gold Laner",
-    yearsExp: 4,
-    rating: 4.6,
-    totalReviews: 98,
-    available: true,
-    bio: "Gold Laner andalan EVOS. Ahli farming dan late game carry.",
-    specializations: ["Gold Lane", "Farming", "Late Game"],
-    initial: "EW",
-    color: "from-blue-500 to-cyan-500",
-  },
-  {
-    id: "onic-sanz",
-    nickname: "ONIC Sanz",
-    realName: "Sanusi",
-    exTeam: "ONIC Esports",
-    role: "Mid Laner",
-    yearsExp: 3,
-    rating: 4.9,
-    totalReviews: 156,
-    available: false,
-    bio: "Mid Laner terbaik Southeast Asia. Master of mage dan burst damage.",
-    specializations: ["Mid Lane", "Mage", "Team Fight"],
-    initial: "OS",
-    color: "from-purple-500 to-pink-500",
-  },
-];
+import { useMentorshipData } from "@/hooks/useMentorshipData";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MentorshipPage() {
+  const { data: mentors, loading } = useMentorshipData();
   const [searchQuery, setSearchQuery] = useState("");
   const [gameFilter, setGameFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [availFilter, setAvailFilter] = useState("all");
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   const filteredMentors = mentors.filter((m) => {
     if (searchQuery && !m.nickname.toLowerCase().includes(searchQuery.toLowerCase())) return false;

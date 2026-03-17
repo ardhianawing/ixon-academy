@@ -14,6 +14,7 @@ import {
   Brain,
   BookOpen,
   ClipboardList,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,35 +22,30 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { TalentScoreCircle } from "@/components/ui/TalentScoreCircle";
+import { useProfileExportData } from "@/hooks/useProfileExportData";
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
+// ─── Icon Map ───────────────────────────────────────────────────────────────
 
-const PROFILE = {
-  avatar: "T",
-  username: "TENSAI",
-  rank: "Mythical Glory",
-  role: "Jungler",
-  game: "MLBB",
-  talentScore: 78,
-  skills: [
-    { name: "Mechanical", score: 80, color: "bg-blue-500" },
-    { name: "Game Sense", score: 65, color: "bg-purple-500" },
-  ],
-  badges: [
-    { name: "Review Master", icon: Star },
-    { name: "Course Scholar", icon: BookOpen },
-    { name: "Community MVP", icon: Trophy },
-    { name: "Streak 30 Hari", icon: Swords },
-  ],
-  stats: {
-    matchesReviewed: 47,
-    coursesCompleted: 12,
-  },
+const BADGE_ICON_MAP: Record<string, React.ElementType> = {
+  Star,
+  BookOpen,
+  Trophy,
+  Swords,
 };
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function ProfileExportPage() {
+  const { data: PROFILE, loading } = useProfileExportData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
   const handleAction = (action: string) => {
     toast.info("Coming soon", {
       description: `Fitur ${action} sedang dalam pengembangan.`,
@@ -149,7 +145,7 @@ export default function ProfileExportPage() {
               </p>
               <div className="grid grid-cols-2 gap-2">
                 {PROFILE.badges.map((badge) => {
-                  const Icon = badge.icon;
+                  const Icon = BADGE_ICON_MAP[badge.iconName] || Star;
                   return (
                     <div
                       key={badge.name}

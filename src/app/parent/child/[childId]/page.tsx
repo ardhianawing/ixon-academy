@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { motion } from "framer-motion";
 import {
   ResponsiveContainer,
@@ -17,7 +18,6 @@ import {
   TrendingUp,
   Gamepad2,
   GraduationCap,
-  User,
   ArrowLeft,
   FileText,
   Calendar,
@@ -29,101 +29,33 @@ import {
   CheckCircle2,
   AlertCircle,
   Star,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+import { useParentChildData } from "@/hooks/useParentChildData";
 
-const child = {
-  nickname: "AceHunter",
-  realName: "Andi Pratama",
-  game: "MLBB",
-  tier: "Free",
-  level: 5,
-  avatar: "AP",
-  joinDate: "Januari 2026",
+// ─── Stat Icon/Color Config ─────────────────────────────────────────────────
+
+const statIconMap: Record<string, React.ElementType> = {
+  "Lessons Diselesaikan": BookOpen,
+  "Quiz Dikerjakan": Trophy,
+  "Total Jam Belajar": Clock,
+  "Post di Komunitas": MessageSquare,
+  "Talent Score": Target,
+  "Attitude Score": Shield,
 };
 
-const weeklyReport = {
-  text: "Minggu ini, Andi menyelesaikan 3 lessons, mengerjakan 2 quiz (rata-rata 85%), dan aktif di komunitas dengan 0 report.",
-  period: "3 - 9 Maret 2026",
-};
-
-const detailedStats = [
-  {
-    icon: BookOpen,
-    label: "Lessons Diselesaikan",
-    value: "3",
-    unit: "lessons",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/10",
-  },
-  {
-    icon: Trophy,
-    label: "Quiz Dikerjakan",
-    value: "2",
-    unit: "quiz",
-    color: "text-[#D4A843]",
-    bgColor: "bg-[#D4A843]/10",
-    subtitle: "Rata-rata: 85%",
-  },
-  {
-    icon: Clock,
-    label: "Total Jam Belajar",
-    value: "13.5",
-    unit: "jam",
-    color: "text-green-400",
-    bgColor: "bg-green-500/10",
-  },
-  {
-    icon: MessageSquare,
-    label: "Post di Komunitas",
-    value: "4",
-    unit: "post",
-    color: "text-purple-400",
-    bgColor: "bg-purple-500/10",
-    subtitle: "0 report",
-  },
-  {
-    icon: Target,
-    label: "Talent Score",
-    value: "72",
-    unit: "/100",
-    color: "text-[#D4A843]",
-    bgColor: "bg-[#D4A843]/10",
-    subtitle: "+4 dari minggu lalu",
-  },
-  {
-    icon: Shield,
-    label: "Attitude Score",
-    value: "92",
-    unit: "/100",
-    color: "text-green-400",
-    bgColor: "bg-green-500/10",
-    subtitle: "Sangat Baik",
-  },
-];
-
-const timeManagement = [
-  { name: "Belajar Kursus", value: 45, color: "#D4A843" },
-  { name: "Quiz & Latihan", value: 20, color: "#3B82F6" },
-  { name: "Komunitas & Forum", value: 15, color: "#8B5CF6" },
-  { name: "Menonton Replay", value: 12, color: "#10B981" },
-  { name: "Mentoring", value: 8, color: "#F59E0B" },
-];
-
-const careerInfo = {
-  interest: "Pro Player / Content Creator",
-  preferredRole: "Jungler",
-  strengths: ["Mekanik Hero", "Farming Efficiency", "Adaptasi Meta"],
-  areasToImprove: ["Map Awareness", "Komunikasi Tim", "Late Game Decision"],
-  recommendation:
-    "Andi menunjukkan potensi yang baik sebagai Jungler. Disarankan untuk mengikuti kursus 'Advanced Rotation' dan sesi mentoring dengan coach jungler untuk memperdalam pemahaman rotasi dan timing objektif.",
+const statColorMap: Record<string, { color: string; bgColor: string }> = {
+  "Lessons Diselesaikan": { color: "text-blue-400", bgColor: "bg-blue-500/10" },
+  "Quiz Dikerjakan": { color: "text-[#D4A843]", bgColor: "bg-[#D4A843]/10" },
+  "Total Jam Belajar": { color: "text-green-400", bgColor: "bg-green-500/10" },
+  "Post di Komunitas": { color: "text-purple-400", bgColor: "bg-purple-500/10" },
+  "Talent Score": { color: "text-[#D4A843]", bgColor: "bg-[#D4A843]/10" },
+  "Attitude Score": { color: "text-green-400", bgColor: "bg-green-500/10" },
 };
 
 // ─── Custom Tooltip ──────────────────────────────────────────────────────────
@@ -145,8 +77,21 @@ function PieTooltip({ active, payload }: any) {
 export default function ChildReportPage({
   params,
 }: {
-  params: { childId: string };
+  params: Promise<{ childId: string }>;
 }) {
+  const { childId } = use(params);
+  const { data, loading } = useParentChildData(childId);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  const { child, weeklyReport, detailedStats, timeManagement, careerInfo } = data;
+
   return (
     <div className="space-y-8">
       {/* Back nav */}
@@ -237,40 +182,44 @@ export default function ChildReportPage({
           Statistik Detail
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {detailedStats.map((stat, i) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.15 + i * 0.05 }}
-            >
-              <Card className="bg-[#1A2332] border-gray-800">
-                <CardContent className="p-5">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-lg ${stat.bgColor} flex items-center justify-center shrink-0`}
-                    >
-                      <stat.icon className={`w-5 h-5 ${stat.color}`} />
+          {detailedStats.map((stat, i) => {
+            const Icon = statIconMap[stat.label] ?? BookOpen;
+            const colors = statColorMap[stat.label] ?? { color: "text-blue-400", bgColor: "bg-blue-500/10" };
+            return (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, delay: 0.15 + i * 0.05 }}
+              >
+                <Card className="bg-[#1A2332] border-gray-800">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className={`w-10 h-10 rounded-lg ${colors.bgColor} flex items-center justify-center shrink-0`}
+                      >
+                        <Icon className={`w-5 h-5 ${colors.color}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-gray-400 truncate">
+                          {stat.label}
+                        </p>
+                        <p className={`text-xl font-bold ${colors.color}`}>
+                          {stat.value}
+                          <span className="text-sm text-gray-500 font-normal ml-0.5">
+                            {stat.unit}
+                          </span>
+                        </p>
+                        {stat.subtitle && (
+                          <p className="text-xs text-gray-500">{stat.subtitle}</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-gray-400 truncate">
-                        {stat.label}
-                      </p>
-                      <p className={`text-xl font-bold ${stat.color}`}>
-                        {stat.value}
-                        <span className="text-sm text-gray-500 font-normal ml-0.5">
-                          {stat.unit}
-                        </span>
-                      </p>
-                      {stat.subtitle && (
-                        <p className="text-xs text-gray-500">{stat.subtitle}</p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            );
+          })}
         </div>
       </motion.div>
 
@@ -382,7 +331,7 @@ export default function ChildReportPage({
                     outerRadius={100}
                     paddingAngle={4}
                     dataKey="value"
-                    label={({ name, value }) => `${value}%`}
+                    label={({ value }) => `${value}%`}
                   >
                     {timeManagement.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />

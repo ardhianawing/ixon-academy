@@ -10,10 +10,9 @@ import {
   CheckCircle2,
   AlertTriangle,
   Sparkles,
+  Loader2,
 } from "lucide-react";
-
-// Mock: user tier — change to "SILVER" to see upgrade CTA
-const USER_TIER: string = "GOLD";
+import { useSubmitGameplayData } from "@/hooks/useSubmitGameplayData";
 
 const container = {
   hidden: { opacity: 0 },
@@ -26,6 +25,7 @@ const item = {
 };
 
 export default function SubmitGameplayPage() {
+  const { data, loading } = useSubmitGameplayData();
   const [game, setGame] = useState("");
   const [hero, setHero] = useState("");
   const [matchContext, setMatchContext] = useState("ranked");
@@ -34,6 +34,15 @@ export default function SubmitGameplayPage() {
   const [priority, setPriority] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  const USER_TIER = data.userTier;
   const canSubmit = game && hero && gameplayUrl && description.length > 10;
 
   if (USER_TIER === "SILVER" || USER_TIER === "BRONZE" || USER_TIER === "FREE") {

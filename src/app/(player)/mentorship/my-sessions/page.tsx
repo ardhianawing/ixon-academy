@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -14,65 +13,13 @@ import {
   Award,
   ChevronRight,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const upcomingSessions = [
-  {
-    id: "s1",
-    mentorNickname: "RRQ Lemon",
-    mentorInitial: "RL",
-    mentorColor: "from-red-500 to-orange-500",
-    sessionType: "1-on-1 Review",
-    emoji: "🎯",
-    date: "15 Mar 2026",
-    time: "14:00 WIB",
-    duration: "30 menit",
-    status: "confirmed",
-    price: "Rp 150.000",
-    notes: "Review gameplay ranked match terakhir",
-  },
-];
-
-const pastSessions = [
-  {
-    id: "s2",
-    mentorNickname: "RRQ Lemon",
-    mentorInitial: "RL",
-    mentorColor: "from-red-500 to-orange-500",
-    sessionType: "Group Session",
-    emoji: "👥",
-    date: "8 Mar 2026",
-    time: "19:00 WIB",
-    duration: "60 menit",
-    status: "completed",
-    price: "Rp 75.000",
-    rating: 5,
-    review:
-      "Sesi yang sangat bermanfaat! Lemon menjelaskan rotasi jungler dengan sangat detail. Sekarang saya lebih paham kapan harus gank dan kapan farming.",
-  },
-  {
-    id: "s3",
-    mentorNickname: "EVOS Wannn",
-    mentorInitial: "EW",
-    mentorColor: "from-blue-500 to-cyan-500",
-    sessionType: "1-on-1 Review",
-    emoji: "🎯",
-    date: "1 Mar 2026",
-    time: "10:00 WIB",
-    duration: "30 menit",
-    status: "completed",
-    price: "Rp 150.000",
-    rating: 4,
-    review:
-      "Coaching gold lane yang bagus. Wannn memberikan tips farming pattern yang efektif. Mungkin bisa lebih detail di bagian team fight positioning.",
-  },
-];
+import { useMySessionsData } from "@/hooks/useMySessionsData";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -103,6 +50,18 @@ function RatingStars({
 }
 
 export default function MySessionsPage() {
+  const { data, loading } = useMySessionsData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  const { upcomingSessions, pastSessions } = data;
+
   return (
     <div className="space-y-8">
       {/* Back nav */}

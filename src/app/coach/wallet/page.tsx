@@ -16,64 +16,12 @@ import {
   CreditCard,
   Gift,
   CheckCircle2,
-  Clock,
+  Loader2,
 } from "lucide-react";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+import { useCoachWalletData } from "@/hooks/useCoachWalletData";
 
-const balance = 2350000;
-
-const transactions = [
-  {
-    id: 1,
-    type: "review" as const,
-    label: "Review #045 - TENSAI (Hayabusa)",
-    amount: 75000,
-    date: "8 Mar 2026",
-    status: "completed",
-  },
-  {
-    id: 2,
-    type: "review" as const,
-    label: "Review #044 - IXONReaper (Chou)",
-    amount: 75000,
-    date: "7 Mar 2026",
-    status: "completed",
-  },
-  {
-    id: 3,
-    type: "bonus" as const,
-    label: "Bonus CQS > 4.0 (Februari)",
-    amount: 200000,
-    date: "1 Mar 2026",
-    status: "completed",
-  },
-  {
-    id: 4,
-    type: "withdrawal" as const,
-    label: "Withdrawal ke BCA ****4521",
-    amount: -1500000,
-    date: "28 Feb 2026",
-    status: "completed",
-  },
-  {
-    id: 5,
-    type: "review" as const,
-    label: "Review #043 - ShadowFF (Chrono)",
-    amount: 75000,
-    date: "27 Feb 2026",
-    status: "completed",
-  },
-];
-
-const monthlyEarnings = [
-  { month: "Okt", earning: 1200000 },
-  { month: "Nov", earning: 1450000 },
-  { month: "Des", earning: 1800000 },
-  { month: "Jan", earning: 2100000 },
-  { month: "Feb", earning: 1950000 },
-  { month: "Mar", earning: 2350000 },
-];
+// ─── Config ──────────────────────────────────────────────────────────────────
 
 const typeConfig = {
   review: { icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/10" },
@@ -99,6 +47,16 @@ function formatRupiah(n: number) {
 }
 
 export default function CoachWalletPage() {
+  const { data, loading } = useCoachWalletData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <motion.div
       variants={container}
@@ -125,7 +83,7 @@ export default function CoachWalletPage() {
         <div>
           <p className="text-sm text-muted-foreground">Saldo Tersedia</p>
           <p className="font-heading font-bold text-4xl text-[#D4A843] mt-1">
-            {formatRupiah(balance)}
+            {formatRupiah(data.balance)}
           </p>
         </div>
         <button className="rounded-xl bg-[#D4A843] hover:bg-[#C49A3A] text-black font-semibold px-6 py-3 transition-colors flex items-center gap-2 shrink-0">
@@ -147,7 +105,7 @@ export default function CoachWalletPage() {
         </div>
         <div className="h-[250px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={monthlyEarnings}>
+            <BarChart data={data.monthlyEarnings}>
               <XAxis
                 dataKey="month"
                 tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 12 }}
@@ -193,7 +151,7 @@ export default function CoachWalletPage() {
         </div>
 
         <div className="divide-y divide-white/5">
-          {transactions.map((tx) => {
+          {data.transactions.map((tx) => {
             const cfg = typeConfig[tx.type];
             const TxIcon = cfg.icon;
             return (

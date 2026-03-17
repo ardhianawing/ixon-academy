@@ -21,10 +21,9 @@ import {
   Gamepad2,
   GraduationCap,
   Heart,
-  User,
   ChevronRight,
   CheckCircle2,
-  AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,49 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const child = {
-  id: "child-001",
-  nickname: "AceHunter",
-  realName: "Andi Pratama",
-  game: "MLBB",
-  tier: "Free",
-  level: 5,
-  avatar: "AP",
-};
-
-const weeklyHours = [
-  { day: "Sen", hours: 1.5 },
-  { day: "Sel", hours: 2.0 },
-  { day: "Rab", hours: 1.0 },
-  { day: "Kam", hours: 2.5 },
-  { day: "Jum", hours: 1.5 },
-  { day: "Sab", hours: 3.0 },
-  { day: "Min", hours: 2.0 },
-];
-
-const courseProgress = [
-  {
-    title: "Dasar-Dasar Jungling",
-    progress: 75,
-    totalLessons: 12,
-    completedLessons: 9,
-  },
-  {
-    title: "Map Awareness 101",
-    progress: 40,
-    totalLessons: 10,
-    completedLessons: 4,
-  },
-];
-
-const talentTrend = [
-  { week: "Minggu 1", score: 58 },
-  { week: "Minggu 2", score: 63 },
-  { week: "Minggu 3", score: 68 },
-  { week: "Minggu 4", score: 72 },
-];
+import { useParentDashboardData } from "@/hooks/useParentDashboardData";
 
 // ─── Custom Tooltip ─────────────────────────────────────────────────────────
 
@@ -105,6 +62,17 @@ function TalentTooltip({ active, payload, label }: any) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ParentDashboardPage() {
+  const { data, loading } = useParentDashboardData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  const { child, weeklyHours, courseProgress, talentTrend } = data;
   const totalHours = weeklyHours.reduce((sum, d) => sum + d.hours, 0);
 
   return (

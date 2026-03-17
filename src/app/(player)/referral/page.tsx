@@ -11,37 +11,39 @@ import {
   MessageCircle,
   Twitter,
   ExternalLink,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-const REFERRAL_CODE = "TENSAI2026";
-const REFERRAL_LINK = "https://ixon.academy/ref/TENSAI2026";
-
-const referralList = [
-  { nama: "JungleBeast99", tanggal: "5 Mar 2026", status: "Aktif" },
-  { nama: "MiiyaQueen", tanggal: "28 Feb 2026", status: "Aktif" },
-  { nama: "ProTankID", tanggal: "20 Feb 2026", status: "Pending" },
-];
+import { useReferralData } from "@/hooks/useReferralData";
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function ReferralPage() {
+  const { data, loading } = useReferralData();
   const [copied, setCopied] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  const { referralCode, referralLink, referralList } = data;
+
   const copyCode = () => {
-    navigator.clipboard.writeText(REFERRAL_CODE);
+    navigator.clipboard.writeText(referralCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const copyLink = () => {
-    navigator.clipboard.writeText(REFERRAL_LINK);
+    navigator.clipboard.writeText(referralLink);
     setLinkCopied(true);
     setTimeout(() => setLinkCopied(false), 2000);
   };
@@ -49,7 +51,7 @@ export default function ReferralPage() {
   const shareWA = () => {
     window.open(
       `https://wa.me/?text=${encodeURIComponent(
-        `Gabung IXON Academy bareng aku! Pakai kode referral ${REFERRAL_CODE} dan kita berdua dapat 1 minggu Silver gratis. ${REFERRAL_LINK}`
+        `Gabung IXON Academy bareng aku! Pakai kode referral ${referralCode} dan kita berdua dapat 1 minggu Silver gratis. ${referralLink}`
       )}`,
       "_blank"
     );
@@ -58,7 +60,7 @@ export default function ReferralPage() {
   const shareTwitter = () => {
     window.open(
       `https://twitter.com/intent/tweet?text=${encodeURIComponent(
-        `Yuk gabung IXON Academy! Pakai kode referral ${REFERRAL_CODE} dan kita berdua dapat 1 minggu Silver gratis 🎮 ${REFERRAL_LINK}`
+        `Yuk gabung IXON Academy! Pakai kode referral ${referralCode} dan kita berdua dapat 1 minggu Silver gratis 🎮 ${referralLink}`
       )}`,
       "_blank"
     );
@@ -88,7 +90,7 @@ export default function ReferralPage() {
           <p className="text-sm text-gray-400">Kode Referral Kamu</p>
           <div className="flex items-center justify-center gap-3">
             <span className="text-3xl font-bold tracking-widest text-[#D4A843] font-mono">
-              {REFERRAL_CODE}
+              {referralCode}
             </span>
             <button
               onClick={copyCode}
@@ -120,7 +122,7 @@ export default function ReferralPage() {
           <div className="flex items-center gap-2 bg-[#0B1120] rounded-lg p-3 border border-white/5">
             <ExternalLink className="h-4 w-4 text-gray-400 shrink-0" />
             <span className="text-sm text-gray-300 truncate flex-1 font-mono">
-              {REFERRAL_LINK}
+              {referralLink}
             </span>
             <button
               onClick={copyLink}
@@ -181,7 +183,7 @@ export default function ReferralPage() {
           <div className="flex items-center gap-3 mb-4">
             <Users className="h-5 w-5 text-[#D4A843]" />
             <div>
-              <p className="text-2xl font-bold text-white">3</p>
+              <p className="text-2xl font-bold text-white">{referralList.length}</p>
               <p className="text-xs text-gray-400">
                 teman sudah mendaftar via kode kamu
               </p>

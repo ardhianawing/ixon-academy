@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { use, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -15,88 +14,12 @@ import {
   Flame,
   Trophy,
   User,
+  Loader2,
 } from "lucide-react";
 
 import { GameBadge } from "@/components/ui/GameBadge";
 import { TalentScoreCircle } from "@/components/ui/TalentScoreCircle";
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-interface PlayerProfile {
-  id: string;
-  nickname: string;
-  avatar: string;
-  game: string;
-  rank: string;
-  role: string;
-  talentScore: number;
-  skill: number;
-  mindset: number;
-  commitment: number;
-}
-
-const playersData: Record<string, PlayerProfile> = {
-  "phoenix-blade": {
-    id: "phoenix-blade",
-    nickname: "PhoenixBlade",
-    avatar: "PB",
-    game: "MLBB",
-    rank: "Mythical Honor",
-    role: "Gold Laner",
-    talentScore: 87,
-    skill: 90,
-    mindset: 85,
-    commitment: 82,
-  },
-  tensai: {
-    id: "tensai",
-    nickname: "TENSAI",
-    avatar: "TS",
-    game: "MLBB",
-    rank: "Mythical Glory",
-    role: "Jungler",
-    talentScore: 78,
-    skill: 82,
-    mindset: 75,
-    commitment: 72,
-  },
-  "ixon-reaper": {
-    id: "ixon-reaper",
-    nickname: "IXONReaper",
-    avatar: "IR",
-    game: "MLBB",
-    rank: "Mythic",
-    role: "EXP Laner",
-    talentScore: 72,
-    skill: 70,
-    mindset: 78,
-    commitment: 68,
-  },
-  "shadow-ff": {
-    id: "shadow-ff",
-    nickname: "ShadowFF",
-    avatar: "SF",
-    game: "FF",
-    rank: "Grandmaster",
-    role: "Rusher",
-    talentScore: 65,
-    skill: 60,
-    mindset: 70,
-    commitment: 65,
-  },
-  "ace-hunter": {
-    id: "ace-hunter",
-    nickname: "AceHunter",
-    avatar: "AH",
-    game: "MLBB",
-    rank: "Legend",
-    role: "Roamer",
-    talentScore: 45,
-    skill: 40,
-    mindset: 55,
-    commitment: 42,
-  },
-};
+import { useScoutingInviteData } from "@/hooks/useScoutingInviteData";
 
 // ─── Signal Stat Row ──────────────────────────────────────────────────────────
 
@@ -156,15 +79,27 @@ const item = {
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 
-export default function InviteTrialPage() {
-  const params = useParams();
-  const playerId = params.playerId as string;
-  const player = playersData[playerId];
+export default function InviteTrialPage({
+  params,
+}: {
+  params: Promise<{ playerId: string }>;
+}) {
+  const { playerId } = use(params);
+  const { data, loading } = useScoutingInviteData(playerId);
+  const player = data.player;
 
   const [message, setMessage] = useState("");
   const [trialDate, setTrialDate] = useState("");
   const [trialLocation, setTrialLocation] = useState("");
   const [submitted, setSubmitted] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   if (!player) {
     return (

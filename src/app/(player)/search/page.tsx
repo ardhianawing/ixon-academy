@@ -10,68 +10,15 @@ import {
   Users,
   CalendarDays,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useSearchData, type ResultCategory } from "@/hooks/useSearchData";
 
-// ─── Mock Data ───────────────────────────────────────────────────────────────
-
-type ResultCategory = "course" | "post" | "player" | "event";
-
-interface SearchResult {
-  id: string;
-  title: string;
-  subtitle: string;
-  category: ResultCategory;
-  href: string;
-}
-
-const MOCK_RESULTS: SearchResult[] = [
-  {
-    id: "c1",
-    title: "Jungle Mastery",
-    subtitle: "Kuasai peran jungler dari dasar hingga mahir — 12 modul",
-    category: "course",
-    href: "/academy/jungle-mastery",
-  },
-  {
-    id: "c2",
-    title: "Advanced Jungle Pathing",
-    subtitle: "Optimalisasi rute jungle untuk efisiensi farm & gank",
-    category: "course",
-    href: "/academy/jungle-pathing",
-  },
-  {
-    id: "p1",
-    title: "Tips Jungler Season 35",
-    subtitle: "Strategi terbaru untuk jungler di meta Season 35",
-    category: "post",
-    href: "/community/tips-jungler-s35",
-  },
-  {
-    id: "p2",
-    title: "Guide Jungle Rotation",
-    subtitle: "Pola rotasi jungle yang efektif untuk ranked game",
-    category: "post",
-    href: "/community/jungle-rotation",
-  },
-  {
-    id: "u1",
-    title: "TENSAI (Jungler)",
-    subtitle: "Mythical Glory · 78 Talent Score · 47 reviews",
-    category: "player",
-    href: "/profile/tensai",
-  },
-  {
-    id: "e1",
-    title: "Jungle 1v1 Challenge",
-    subtitle: "Event mingguan — Buktikan skill jungler-mu! 15 Mar 2026",
-    category: "event",
-    href: "/events/jungle-1v1",
-  },
-];
+// ─── Constants ──────────────────────────────────────────────────────────────
 
 const TABS = [
   { key: "semua", label: "Semua" },
@@ -94,13 +41,22 @@ const categoryMeta: Record<
 // ─── Main Page ───────────────────────────────────────────────────────────────
 
 export default function SearchPage() {
+  const { data: results, loading } = useSearchData();
   const [query, setQuery] = useState("jungle");
   const [activeTab, setActiveTab] = useState<string>("semua");
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
   const filtered =
     activeTab === "semua"
-      ? MOCK_RESULTS
-      : MOCK_RESULTS.filter((r) => r.category === activeTab);
+      ? results
+      : results.filter((r) => r.category === activeTab);
 
   return (
     <div className="space-y-6">
@@ -125,8 +81,8 @@ export default function SearchPage() {
         {TABS.map((tab) => {
           const count =
             tab.key === "semua"
-              ? MOCK_RESULTS.length
-              : MOCK_RESULTS.filter((r) => r.category === tab.key).length;
+              ? results.length
+              : results.filter((r) => r.category === tab.key).length;
           return (
             <button
               key={tab.key}
