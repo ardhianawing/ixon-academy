@@ -11,68 +11,9 @@ import {
   UserPlus,
   BarChart3,
   Award,
+  Loader2,
 } from "lucide-react";
-
-interface Coach {
-  id: number;
-  name: string;
-  avatar: string;
-  cqsScore: number;
-  totalReviews: number;
-  avgRating: number;
-  status: "Active" | "Inactive";
-  specialization: string;
-  totalStudents: number;
-}
-
-interface Application {
-  id: number;
-  name: string;
-  avatar: string;
-  game: string;
-  rank: string;
-  experience: string;
-  appliedDate: string;
-  status: "Pending" | "Approved" | "Rejected";
-}
-
-const coaches: Coach[] = [
-  {
-    id: 1,
-    name: "Coach Alex Wijaya",
-    avatar: "AW",
-    cqsScore: 92,
-    totalReviews: 187,
-    avgRating: 4.8,
-    status: "Active",
-    specialization: "Jungler / Assassin",
-    totalStudents: 45,
-  },
-  {
-    id: 2,
-    name: "Coach Maria Santos",
-    avatar: "MS",
-    cqsScore: 85,
-    totalReviews: 124,
-    avgRating: 4.6,
-    status: "Active",
-    specialization: "Midlane / Mage",
-    totalStudents: 32,
-  },
-];
-
-const applications: Application[] = [
-  {
-    id: 1,
-    name: "Dani Pratama",
-    avatar: "DP",
-    game: "Mobile Legends",
-    rank: "Mythical Glory 1200+",
-    experience: "3 tahun coaching, ex-pro player MDL Season 4",
-    appliedDate: "2026-03-08",
-    status: "Pending",
-  },
-];
+import { useAdminCoachesData, type Application } from "@/hooks/useAdminCoachesData";
 
 function getCqsColor(score: number) {
   if (score >= 90) return "text-emerald-400 bg-emerald-500/20";
@@ -88,13 +29,22 @@ function getRatingStars(rating: number) {
 }
 
 export default function CoachesPage() {
-  const [apps, setApps] = useState(applications);
+  const { data, loading } = useAdminCoachesData();
+  const [apps, setApps] = useState<Application[]>(data.applications);
 
   const handleApplication = (id: number, action: "Approved" | "Rejected") => {
     setApps((prev) =>
       prev.map((a) => (a.id === id ? { ...a, status: action } : a))
     );
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -138,7 +88,7 @@ export default function CoachesPage() {
             </tr>
           </thead>
           <tbody>
-            {coaches.map((coach) => {
+            {data.coaches.map((coach) => {
               const { full } = getRatingStars(coach.avgRating);
               return (
                 <tr
@@ -297,8 +247,8 @@ export default function CoachesPage() {
               <Users className="size-4 text-[#D4A843]" />
               <p className="text-xs text-muted-foreground">Queue Size</p>
             </div>
-            <p className="text-2xl font-bold text-foreground">5</p>
-            <p className="text-xs text-yellow-400">2 high priority</p>
+            <p className="text-2xl font-bold text-foreground">{data.capacity.queueSize}</p>
+            <p className="text-xs text-yellow-400">{data.capacity.highPriority} high priority</p>
           </div>
 
           <div className="rounded-lg bg-[#0B1120] p-4 space-y-1">
@@ -306,8 +256,8 @@ export default function CoachesPage() {
               <Clock className="size-4 text-[#D4A843]" />
               <p className="text-xs text-muted-foreground">Avg Turnaround</p>
             </div>
-            <p className="text-2xl font-bold text-foreground">18h</p>
-            <p className="text-xs text-emerald-400">Target: 24h</p>
+            <p className="text-2xl font-bold text-foreground">{data.capacity.avgTurnaround}</p>
+            <p className="text-xs text-emerald-400">Target: {data.capacity.turnaroundTarget}</p>
           </div>
 
           <div className="rounded-lg bg-[#0B1120] p-4 space-y-1">
@@ -315,7 +265,7 @@ export default function CoachesPage() {
               <Star className="size-4 text-[#D4A843]" />
               <p className="text-xs text-muted-foreground">Avg CQS</p>
             </div>
-            <p className="text-2xl font-bold text-foreground">88.5</p>
+            <p className="text-2xl font-bold text-foreground">{data.capacity.avgCqs}</p>
             <p className="text-xs text-emerald-400">Above threshold</p>
           </div>
 
@@ -324,11 +274,11 @@ export default function CoachesPage() {
               <CheckCircle className="size-4 text-[#D4A843]" />
               <p className="text-xs text-muted-foreground">Utilization</p>
             </div>
-            <p className="text-2xl font-bold text-foreground">78%</p>
+            <p className="text-2xl font-bold text-foreground">{data.capacity.utilization}%</p>
             <div className="w-full h-1.5 rounded-full bg-[#1A2332] mt-1">
               <div
                 className="h-full rounded-full bg-[#D4A843]"
-                style={{ width: "78%" }}
+                style={{ width: `${data.capacity.utilization}%` }}
               />
             </div>
           </div>

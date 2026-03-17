@@ -13,6 +13,7 @@ import {
   UserCheck,
   Star,
   MessageSquare,
+  Loader2,
 } from "lucide-react";
 import {
   LineChart,
@@ -26,38 +27,25 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { motion } from "framer-motion";
+import { useAdminDashboardData } from "@/hooks/useAdminDashboardData";
 
-const userGrowthData = [
-  { month: "Sep", users: 50 },
-  { month: "Okt", users: 120 },
-  { month: "Nov", users: 250 },
-  { month: "Des", users: 420 },
-  { month: "Jan", users: 650 },
-  { month: "Feb", users: 847 },
-];
-
-const revenueData = [
-  { month: "Sep", revenue: 2.1 },
-  { month: "Okt", revenue: 4.8 },
-  { month: "Nov", revenue: 7.2 },
-  { month: "Des", revenue: 9.5 },
-  { month: "Jan", revenue: 11.3 },
-  { month: "Feb", revenue: 12.5 },
-];
-
-const alerts = [
-  { label: "SLA Breaches", count: 3, color: "bg-red-500/20 text-red-400 border-red-500/30" },
-  { label: "Flagged Reviews", count: 2, color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" },
-  { label: "Pending Reports", count: 5, color: "bg-orange-500/20 text-orange-400 border-orange-500/30" },
-];
-
-const quickStats = [
-  { icon: UserCheck, label: "Active Coaches", value: 4 },
-  { icon: Star, label: "Reviews Today", value: 12 },
-  { icon: MessageSquare, label: "Posts Today", value: 28 },
-];
+const quickStatIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  UserCheck,
+  Star,
+  MessageSquare,
+};
 
 export default function AdminDashboardPage() {
+  const { data, loading } = useAdminDashboardData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -72,29 +60,29 @@ export default function AdminDashboardPage() {
       {/* Key Metrics */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         <StatCard
-          value="847"
+          value={data.metrics.totalUsers}
           label="Total Users"
-          trend={{ direction: "up", value: "+30%" }}
+          trend={{ direction: "up", value: data.metrics.totalUsersTrend }}
         />
         <StatCard
-          value="156"
+          value={data.metrics.dau}
           label="DAU"
-          trend={{ direction: "up", value: "+12%" }}
+          trend={{ direction: "up", value: data.metrics.dauTrend }}
         />
         <StatCard
-          value="623"
+          value={data.metrics.mau}
           label="MAU"
-          trend={{ direction: "up", value: "+18%" }}
+          trend={{ direction: "up", value: data.metrics.mauTrend }}
         />
         <StatCard
-          value="Rp 12.5jt"
+          value={data.metrics.mrr}
           label="MRR"
-          trend={{ direction: "up", value: "+22%" }}
+          trend={{ direction: "up", value: data.metrics.mrrTrend }}
         />
         <StatCard
-          value="8.2%"
+          value={data.metrics.conversionRate}
           label="Conversion Rate"
-          trend={{ direction: "up", value: "+1.4%" }}
+          trend={{ direction: "up", value: data.metrics.conversionRateTrend }}
         />
       </div>
 
@@ -110,7 +98,7 @@ export default function AdminDashboardPage() {
             User Growth (6 Bulan)
           </h3>
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={userGrowthData}>
+            <LineChart data={data.userGrowthData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a3a4e" />
               <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
               <YAxis stroke="#64748b" fontSize={12} />
@@ -144,7 +132,7 @@ export default function AdminDashboardPage() {
             Revenue (Juta Rp)
           </h3>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={revenueData}>
+            <BarChart data={data.revenueData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#2a3a4e" />
               <XAxis dataKey="month" stroke="#64748b" fontSize={12} />
               <YAxis stroke="#64748b" fontSize={12} />
@@ -165,7 +153,7 @@ export default function AdminDashboardPage() {
 
       {/* Alert Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {alerts.map((alert) => (
+        {data.alerts.map((alert) => (
           <motion.div
             key={alert.label}
             initial={{ opacity: 0, scale: 0.95 }}
@@ -183,20 +171,23 @@ export default function AdminDashboardPage() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {quickStats.map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-border bg-[#1A2332] p-4 flex items-center gap-4"
-          >
-            <div className="size-10 rounded-lg bg-[#D4A843]/10 flex items-center justify-center">
-              <stat.icon className="size-5 text-[#D4A843]" />
+        {data.quickStats.map((stat) => {
+          const Icon = quickStatIcons[stat.iconName] || UserCheck;
+          return (
+            <div
+              key={stat.label}
+              className="rounded-xl border border-border bg-[#1A2332] p-4 flex items-center gap-4"
+            >
+              <div className="size-10 rounded-lg bg-[#D4A843]/10 flex items-center justify-center">
+                <Icon className="size-5 text-[#D4A843]" />
+              </div>
+              <div>
+                <p className="text-xl font-bold text-foreground">{stat.value}</p>
+                <p className="text-xs text-muted-foreground">{stat.label}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

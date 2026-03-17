@@ -10,56 +10,22 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingDown, Users, MessageSquare, BookOpen, ArrowRight } from "lucide-react";
-
-const funnelSteps = [
-  { label: "Guest", value: 2000, color: "#64748b" },
-  { label: "Free", value: 847, color: "#3b82f6" },
-  { label: "Silver", value: 245, color: "#94a3b8" },
-  { label: "Gold", value: 89, color: "#D4A843" },
-  { label: "Platinum", value: 12, color: "#22d3ee" },
-];
-
-const retentionData = [
-  { day: "D0", rate: 100 },
-  { day: "D1", rate: 72 },
-  { day: "D3", rate: 58 },
-  { day: "D7", rate: 45 },
-  { day: "D14", rate: 34 },
-  { day: "D30", rate: 28 },
-  { day: "D60", rate: 22 },
-  { day: "D90", rate: 18 },
-];
-
-const popularCourses = [
-  {
-    title: "Mastering Jungler Role",
-    enrollments: 234,
-    completionRate: 78,
-  },
-  {
-    title: "Gold to Mythic: Midlane Guide",
-    enrollments: 189,
-    completionRate: 65,
-  },
-  {
-    title: "Map Awareness & Rotation",
-    enrollments: 156,
-    completionRate: 82,
-  },
-  {
-    title: "Draft Pick Strategy",
-    enrollments: 132,
-    completionRate: 71,
-  },
-  {
-    title: "EXP Lane Domination",
-    enrollments: 98,
-    completionRate: 59,
-  },
-];
+import { TrendingDown, Users, MessageSquare, BookOpen, ArrowRight, Loader2 } from "lucide-react";
+import { useAdminAnalyticsData } from "@/hooks/useAdminAnalyticsData";
 
 export default function AnalyticsPage() {
+  const { data, loading } = useAdminAnalyticsData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  const { funnelSteps, retentionData, popularCourses, communityStats } = data;
+
   return (
     <div className="space-y-6">
       <div>
@@ -273,27 +239,27 @@ export default function AnalyticsPage() {
           <div className="space-y-4">
             <div className="rounded-lg bg-[#0B1120] p-4 space-y-1">
               <p className="text-xs text-muted-foreground">Posts per Hari</p>
-              <p className="text-2xl font-bold text-foreground">28</p>
-              <p className="text-xs text-emerald-400">+12% dari minggu lalu</p>
+              <p className="text-2xl font-bold text-foreground">{communityStats.postsPerDay}</p>
+              <p className="text-xs text-emerald-400">{communityStats.postsPerDayTrend}</p>
             </div>
 
             <div className="rounded-lg bg-[#0B1120] p-4 space-y-1">
               <p className="text-xs text-muted-foreground">Toxicity Rate</p>
-              <p className="text-2xl font-bold text-foreground">2.1%</p>
+              <p className="text-2xl font-bold text-foreground">{communityStats.toxicityRate}%</p>
               <div className="w-full h-1.5 rounded-full bg-[#1A2332] mt-2">
                 <div
                   className="h-full rounded-full bg-emerald-400"
-                  style={{ width: "2.1%" }}
+                  style={{ width: `${communityStats.toxicityRate}%` }}
                 />
               </div>
-              <p className="text-xs text-emerald-400">Di bawah threshold 5%</p>
+              <p className="text-xs text-emerald-400">{communityStats.toxicityThreshold}</p>
             </div>
 
             <div className="rounded-lg bg-[#0B1120] p-4 space-y-1">
               <p className="text-xs text-muted-foreground">Active Threads</p>
-              <p className="text-2xl font-bold text-foreground">47</p>
+              <p className="text-2xl font-bold text-foreground">{communityStats.activeThreads}</p>
               <p className="text-xs text-muted-foreground">
-                12 dengan 10+ replies
+                {communityStats.activeThreadsNote}
               </p>
             </div>
           </div>
