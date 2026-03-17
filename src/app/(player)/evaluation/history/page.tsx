@@ -9,6 +9,7 @@ import {
   Clock,
   Loader2,
 } from "lucide-react";
+import { useEvalHistoryData } from "@/hooks/useEvalHistoryData";
 
 const statusMap = {
   completed: {
@@ -28,33 +29,6 @@ const statusMap = {
   },
 } as const;
 
-const submissions = [
-  {
-    id: "rev-001",
-    hero: "Hayabusa",
-    game: "MLBB",
-    date: "8 Mar 2026",
-    status: "completed" as const,
-    coach: "Coach Alex",
-  },
-  {
-    id: "rev-002",
-    hero: "Ling",
-    game: "MLBB",
-    date: "5 Mar 2026",
-    status: "in-review" as const,
-    coach: "Coach Mira",
-  },
-  {
-    id: "rev-003",
-    hero: "Fanny",
-    game: "MLBB",
-    date: "1 Mar 2026",
-    status: "queued" as const,
-    coach: null,
-  },
-];
-
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.07 } },
@@ -66,6 +40,16 @@ const item = {
 };
 
 export default function ReviewHistoryPage() {
+  const { data: submissions, loading } = useEvalHistoryData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <motion.div
       variants={container}
