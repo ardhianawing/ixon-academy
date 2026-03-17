@@ -10,35 +10,13 @@ import {
 import {
   BookOpen, Upload, ClipboardList, MessageSquare, Trophy,
   CheckCircle2, Clock, Flame, Users, Calendar, ChevronRight,
-  Gamepad2, Zap, ArrowUpRight, Star, Target, Swords,
+  Gamepad2, Zap, ArrowUpRight, Star, Target, Swords, Loader2,
 } from "lucide-react";
 import { TierBadge } from "@/components/ui/TierBadge";
 import { XPBar } from "@/components/ui/XPBar";
+import { useDashboardData } from "@/hooks/useDashboardData";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const radarData = [
-  { stat: "Mechanical", value: 80 },
-  { stat: "Game Sense", value: 65 },
-  { stat: "Hero Mastery", value: 75 },
-  { stat: "Teamwork", value: 60 },
-  { stat: "Mental", value: 70 },
-];
-
-const sparklineData = [
-  { day: "W1", score: 62 },
-  { day: "W2", score: 65 },
-  { day: "W3", score: 68 },
-  { day: "W4", score: 72 },
-  { day: "W5", score: 75 },
-  { day: "W6", score: 78 },
-];
-
-const missions = [
-  { id: 1, emoji: "✅", title: "Login Harian", xp: 10, status: "completed" as const, progress: 1, total: 1 },
-  { id: 2, emoji: "📚", title: "Selesaikan 1 Lesson", xp: 25, status: "in-progress" as const, progress: 0, total: 1 },
-  { id: 3, emoji: "💬", title: "Reply di Forum", xp: 15, status: "not-started" as const, progress: 0, total: 1 },
-];
+// ─── Static Config ───────────────────────────────────────────────────────────
 
 const quickActions = [
   { label: "Belajar", href: "/academy", icon: BookOpen, from: "from-blue-500", to: "to-blue-700", glow: "shadow-blue-500/30" },
@@ -47,58 +25,20 @@ const quickActions = [
   { label: "Forum", href: "/community", icon: MessageSquare, from: "from-purple-500", to: "to-purple-700", glow: "shadow-purple-500/30" },
 ];
 
-const activityFeed = [
-  { id: 1, icon: Star, iconColor: "text-amber-400", bg: "bg-amber-500/10", text: "Coach Alex review gameplay #12 kamu", time: "2 jam lalu" },
-  { id: 2, icon: Zap, iconColor: "text-emerald-400", bg: "bg-emerald-500/10", text: "Kamu naik ke Level 14!", time: "5 jam lalu" },
-  { id: 3, icon: CheckCircle2, iconColor: "text-blue-400", bg: "bg-blue-500/10", text: "Misi 'Login Harian' tercapai", time: "6 jam lalu" },
-  { id: 4, icon: Trophy, iconColor: "text-purple-400", bg: "bg-purple-500/10", text: "Quiz 'Jungle Basics': 85%", time: "kemarin" },
-];
+const MISSION_EMOJIS: Record<string, string> = {
+  login: "✅",
+  lesson: "📚",
+  community: "💬",
+  evaluation: "🎮",
+  quiz: "🧠",
+};
 
-const upcomingEvents = [
-  { id: 1, title: "IXON Weekly Scrim #12", date: "15 Mar", format: "5v5", slots: "24/32", minTier: "SILVER", gradient: "from-blue-600/20 to-blue-900/10" },
-  { id: 2, title: "IXON Rookie Tournament S1", date: "22 Mar", format: "Tournament", slots: "12/16", minTier: "GOLD", gradient: "from-[#D4A843]/20 to-[#D4A843]/5" },
-];
-
-// ─── Highlight cards for mobile carousel ──────────────────────────────────────
-
-const highlightCards = [
-  {
-    id: "mission",
-    icon: Target,
-    iconColor: "text-emerald-400",
-    iconBg: "bg-emerald-500/15",
-    title: "Misi Harian",
-    subtitle: "1 dari 3 selesai",
-    accent: "Streak 7 hari",
-    accentColor: "text-orange-400",
-    href: "/missions",
-    gradient: "from-emerald-600/10 to-emerald-900/5",
-  },
-  {
-    id: "event",
-    icon: Trophy,
-    iconColor: "text-blue-400",
-    iconBg: "bg-blue-500/15",
-    title: "IXON Weekly Scrim #12",
-    subtitle: "15 Mar · 24/32 slot",
-    accent: "Daftar sekarang",
-    accentColor: "text-[#D4A843]",
-    href: "/events",
-    gradient: "from-blue-600/10 to-blue-900/5",
-  },
-  {
-    id: "review",
-    icon: Star,
-    iconColor: "text-amber-400",
-    iconBg: "bg-amber-500/15",
-    title: "Review Baru",
-    subtitle: "Coach Alex review gameplay #12",
-    accent: "Lihat hasil",
-    accentColor: "text-[#D4A843]",
-    href: "/evaluation/history",
-    gradient: "from-amber-600/10 to-amber-900/5",
-  },
-];
+const NOTIF_CONFIG: Record<string, { icon: typeof Star; iconColor: string; bg: string }> = {
+  review: { icon: Star, iconColor: "text-amber-400", bg: "bg-amber-500/10" },
+  level_up: { icon: Zap, iconColor: "text-emerald-400", bg: "bg-emerald-500/10" },
+  mission: { icon: CheckCircle2, iconColor: "text-blue-400", bg: "bg-blue-500/10" },
+  quiz: { icon: Trophy, iconColor: "text-purple-400", bg: "bg-purple-500/10" },
+};
 
 function getMidnightWIBCountdown() {
   const now = new Date();
@@ -114,6 +54,21 @@ function getMidnightWIBCountdown() {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+function formatTimeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const hours = Math.floor(diff / 3_600_000);
+  if (hours < 1) return "baru saja";
+  if (hours < 24) return `${hours} jam lalu`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return "kemarin";
+  return `${days} hari lalu`;
+}
+
+function formatEventDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("id-ID", { day: "numeric", month: "short" });
+}
+
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
   show: (i: number) => ({
@@ -125,6 +80,7 @@ const fadeUp = {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const { data, loading, error } = useDashboardData();
   const [countdown, setCountdown] = useState(getMidnightWIBCountdown());
   const [highlightIndex, setHighlightIndex] = useState(0);
 
@@ -133,15 +89,146 @@ export default function DashboardPage() {
     return () => clearInterval(id);
   }, []);
 
+  // Build highlight cards from data
+  const completedMissions = data.missions.filter((m) => m.status === "completed").length;
+  const highlightCards = [
+    {
+      id: "mission",
+      icon: Target,
+      iconColor: "text-emerald-400",
+      iconBg: "bg-emerald-500/15",
+      title: "Misi Harian",
+      subtitle: `${completedMissions} dari ${data.missions.length} selesai`,
+      accent: `Streak ${data.streak} hari`,
+      accentColor: "text-orange-400",
+      href: "/missions",
+      gradient: "from-emerald-600/10 to-emerald-900/5",
+    },
+    ...(data.upcomingEvents.length > 0
+      ? [{
+          id: "event",
+          icon: Trophy,
+          iconColor: "text-blue-400",
+          iconBg: "bg-blue-500/15",
+          title: data.upcomingEvents[0].title,
+          subtitle: `${formatEventDate(data.upcomingEvents[0].date)} · ${data.upcomingEvents[0].currentParticipants}/${data.upcomingEvents[0].maxParticipants} slot`,
+          accent: "Daftar sekarang",
+          accentColor: "text-[#D4A843]",
+          href: "/events",
+          gradient: "from-blue-600/10 to-blue-900/5",
+        }]
+      : []),
+    ...(data.notifications.filter((n) => !n.isRead).length > 0
+      ? [{
+          id: "review",
+          icon: Star,
+          iconColor: "text-amber-400",
+          iconBg: "bg-amber-500/15",
+          title: "Notifikasi Baru",
+          subtitle: data.notifications.find((n) => !n.isRead)?.body ?? "",
+          accent: "Lihat",
+          accentColor: "text-[#D4A843]",
+          href: "/evaluation/history",
+          gradient: "from-amber-600/10 to-amber-900/5",
+        }]
+      : []),
+  ];
+
+  // Fallback if no highlight cards (shouldn't happen, but safety)
+  if (highlightCards.length === 0) {
+    highlightCards.push({
+      id: "welcome",
+      icon: Star,
+      iconColor: "text-[#D4A843]",
+      iconBg: "bg-[#D4A843]/15",
+      title: "Selamat Datang!",
+      subtitle: "Mulai perjalanan esports-mu",
+      accent: "Mulai belajar",
+      accentColor: "text-[#D4A843]",
+      href: "/academy",
+      gradient: "from-[#D4A843]/10 to-[#D4A843]/5",
+    });
+  }
+
   // Auto-rotate highlight cards on mobile
   useEffect(() => {
+    if (highlightCards.length <= 1) return;
     const id = setInterval(() => {
       setHighlightIndex((prev) => (prev + 1) % highlightCards.length);
     }, 5_000);
     return () => clearInterval(id);
-  }, []);
+  }, [highlightCards.length]);
 
-  const currentHighlight = highlightCards[highlightIndex];
+  const currentHighlight = highlightCards[highlightIndex % highlightCards.length];
+
+  // Derived values
+  const playerName = data.player?.nickname ?? data.user.name;
+  const playerInitial = playerName.charAt(0).toUpperCase();
+  const tier = data.user.tier;
+  const rank = data.player?.rank ?? "—";
+  const role = data.player?.roleIngame ?? "";
+  const gameName = data.player?.game.slug === "mlbb" ? "MLBB" : data.player?.game.title ?? "";
+  const talentScore = Math.round(data.talentScore);
+  const radarData = data.radarData ?? [
+    { stat: "Mechanical", value: 0 },
+    { stat: "Game Sense", value: 0 },
+    { stat: "Hero Mastery", value: 0 },
+    { stat: "Teamwork", value: 0 },
+    { stat: "Mental", value: 0 },
+  ];
+  const scoreTrend = data.scoreTrend;
+  const scoreDiff = scoreTrend.length >= 2
+    ? scoreTrend[scoreTrend.length - 1].score - scoreTrend[0].score
+    : 0;
+
+  // Activity feed from notifications
+  const activityFeed = data.notifications.slice(0, 4).map((n) => {
+    const config = NOTIF_CONFIG[n.type] ?? NOTIF_CONFIG.mission;
+    return {
+      id: n.id,
+      icon: config.icon,
+      iconColor: config.iconColor,
+      bg: config.bg,
+      text: n.body,
+      time: formatTimeAgo(n.sentAt),
+    };
+  });
+
+  // Events
+  const upcomingEvents = data.upcomingEvents.map((e) => ({
+    id: e.id,
+    title: e.title,
+    date: formatEventDate(e.date),
+    format: e.format,
+    slots: `${e.currentParticipants}/${e.maxParticipants}`,
+    minTier: e.tierRequired,
+    gradient: e.tierRequired === "GOLD" ? "from-[#D4A843]/20 to-[#D4A843]/5" : "from-blue-600/20 to-blue-900/10",
+  }));
+
+  // Missions
+  const missions = data.missions.map((m) => ({
+    id: m.id,
+    emoji: MISSION_EMOJIS[m.type] ?? "🎯",
+    title: m.title,
+    xp: m.xp,
+    status: m.status === "completed" ? "completed" as const : m.status === "assigned" ? "not-started" as const : "in-progress" as const,
+    progress: m.status === "completed" ? 1 : 0,
+    total: 1,
+  }));
+
+  // Loading state (only in real mode)
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
+
+  // Error state (only in real mode, falls back to mock)
+  if (error) {
+    // Already falls back to mock data via useData, just show a subtle banner
+  }
 
   return (
     <div className="space-y-5">
@@ -160,19 +247,21 @@ export default function DashboardPage() {
                 {/* Avatar */}
                 <div className="relative">
                   <div className="size-14 rounded-2xl bg-gradient-to-br from-[#D4A843] to-[#A07D2E] flex items-center justify-center text-2xl font-black text-[#0B1120] shadow-[0_0_20px_rgba(212,168,67,0.4)]">
-                    T
+                    {playerInitial}
                   </div>
                   <div className="absolute -bottom-1 -right-1 size-5 rounded-lg bg-[#1A2332] border border-white/10 flex items-center justify-center">
-                    <span className="text-[9px] font-black text-[#D4A843]">14</span>
+                    <span className="text-[9px] font-black text-[#D4A843]">{data.level}</span>
                   </div>
                 </div>
 
                 <div>
                   <p className="text-xs text-white/50 mb-0.5">Selamat datang kembali</p>
-                  <h1 className="font-heading font-black text-xl text-white leading-tight">TENSAI</h1>
+                  <h1 className="font-heading font-black text-xl text-white leading-tight">{playerName}</h1>
                   <div className="flex items-center gap-1.5 mt-1">
-                    <TierBadge tier="GOLD" size="sm" />
-                    <span className="text-[10px] text-white/40 font-medium">MLBB · Jungler</span>
+                    <TierBadge tier={tier} size="sm" />
+                    {gameName && role && (
+                      <span className="text-[10px] text-white/40 font-medium">{gameName} · {role}</span>
+                    )}
                   </div>
                 </div>
               </div>
@@ -186,11 +275,11 @@ export default function DashboardPage() {
                       cx="28" cy="28" r="24" fill="none"
                       stroke="#D4A843" strokeWidth="4"
                       strokeLinecap="round"
-                      strokeDasharray={`${(78 / 100) * 150.8} 150.8`}
+                      strokeDasharray={`${(talentScore / 100) * 150.8} 150.8`}
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="font-heading font-black text-base text-[#D4A843]">78</span>
+                    <span className="font-heading font-black text-base text-[#D4A843]">{talentScore}</span>
                   </div>
                 </div>
                 <span className="text-[10px] text-white/40 mt-0.5">Talent</span>
@@ -198,14 +287,14 @@ export default function DashboardPage() {
             </div>
 
             {/* XP Bar */}
-            <XPBar currentXP={2450} nextLevelXP={3000} level={14} />
+            <XPBar currentXP={data.xp} nextLevelXP={data.xpForNextLevel} level={data.level} />
 
             {/* Stats row */}
             <div className="grid grid-cols-3 gap-2 mt-4">
               {[
-                { icon: Flame, label: "Streak", value: "7 hari", color: "text-orange-400" },
-                { icon: Swords, label: "Rank", value: "Mythic", color: "text-purple-400" },
-                { icon: Target, label: "Misi", value: "1/3", color: "text-emerald-400" },
+                { icon: Flame, label: "Streak", value: `${data.streak} hari`, color: "text-orange-400" },
+                { icon: Swords, label: "Rank", value: rank, color: "text-purple-400" },
+                { icon: Target, label: "Misi", value: `${completedMissions}/${data.missions.length}`, color: "text-emerald-400" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-xl bg-white/[0.05] p-2.5 text-center">
                   <stat.icon className={`size-4 mx-auto mb-1 ${stat.color}`} />
@@ -274,19 +363,21 @@ export default function DashboardPage() {
           </AnimatePresence>
         </Link>
         {/* Dot indicators */}
-        <div className="flex items-center justify-center gap-1.5 mt-2.5">
-          {highlightCards.map((card, i) => (
-            <button
-              key={card.id}
-              onClick={() => setHighlightIndex(i)}
-              className={`rounded-full transition-all ${
-                i === highlightIndex
-                  ? "w-5 h-1.5 bg-[#D4A843]"
-                  : "w-1.5 h-1.5 bg-white/20"
-              }`}
-            />
-          ))}
-        </div>
+        {highlightCards.length > 1 && (
+          <div className="flex items-center justify-center gap-1.5 mt-2.5">
+            {highlightCards.map((card, i) => (
+              <button
+                key={card.id}
+                onClick={() => setHighlightIndex(i)}
+                className={`rounded-full transition-all ${
+                  i === (highlightIndex % highlightCards.length)
+                    ? "w-5 h-1.5 bg-[#D4A843]"
+                    : "w-1.5 h-1.5 bg-white/20"
+                }`}
+              />
+            ))}
+          </div>
+        )}
       </motion.div>
 
       {/* ── Desktop: Daily Missions (hidden on mobile) ────────────────── */}
@@ -298,7 +389,7 @@ export default function DashboardPage() {
           </h2>
           <div className="flex items-center gap-2 text-[11px]">
             <span className="flex items-center gap-1 text-orange-400 font-semibold">
-              <Flame className="size-3" /> 7 hari
+              <Flame className="size-3" /> {data.streak} hari
             </span>
             <span className="text-white/30">·</span>
             <span className="flex items-center gap-1 text-white/40">
@@ -352,10 +443,10 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-1">
             <h2 className="font-heading font-bold text-white text-base">Skill Radar</h2>
             <span className="text-[11px] font-semibold text-[#D4A843] bg-[#D4A843]/10 px-2 py-0.5 rounded-full">
-              Score: 78
+              Score: {talentScore}
             </span>
           </div>
-          <p className="text-[11px] text-white/40 mb-3">Mythical Glory · Update minggu ini</p>
+          <p className="text-[11px] text-white/40 mb-3">{rank} · Update minggu ini</p>
           <div className="h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
               <RadarChart cx="50%" cy="50%" outerRadius="72%" data={radarData}>
@@ -370,98 +461,104 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* ── Desktop: Score Trend (hidden on mobile) ───────────────────── */}
-      <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block">
-        <div className="rounded-2xl bg-[#1A2332] border border-white/[0.06] p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div>
-              <h2 className="font-heading font-bold text-white text-base">Talent Score Trend</h2>
-              <p className="text-[11px] text-white/40">6 minggu terakhir</p>
+      {scoreTrend.length > 0 && (
+        <motion.div custom={4} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block">
+          <div className="rounded-2xl bg-[#1A2332] border border-white/[0.06] p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="font-heading font-bold text-white text-base">Talent Score Trend</h2>
+                <p className="text-[11px] text-white/40">{scoreTrend.length} minggu terakhir</p>
+              </div>
+              <div className={`flex items-center gap-1 ${scoreDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                <ArrowUpRight className="size-4" />
+                <span className="text-sm font-bold">{scoreDiff >= 0 ? "+" : ""}{scoreDiff}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1 text-emerald-400">
-              <ArrowUpRight className="size-4" />
-              <span className="text-sm font-bold">+16</span>
+            <div className="h-[120px]">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={scoreTrend}>
+                  <defs>
+                    <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#D4A843" stopOpacity={0.3} />
+                      <stop offset="100%" stopColor="#D4A843" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#0B1120", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", fontSize: "12px" }}
+                    labelStyle={{ color: "rgba(255,255,255,0.4)" }}
+                    itemStyle={{ color: "#D4A843" }}
+                  />
+                  <Area type="monotone" dataKey="score" stroke="#D4A843" strokeWidth={2.5} fill="url(#goldGrad)"
+                    dot={{ r: 3, fill: "#D4A843", stroke: "#0B1120", strokeWidth: 2 }}
+                    activeDot={{ r: 5, fill: "#D4A843" }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
-          <div className="h-[120px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={sparklineData}>
-                <defs>
-                  <linearGradient id="goldGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#D4A843" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="#D4A843" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#0B1120", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "10px", fontSize: "12px" }}
-                  labelStyle={{ color: "rgba(255,255,255,0.4)" }}
-                  itemStyle={{ color: "#D4A843" }}
-                />
-                <Area type="monotone" dataKey="score" stroke="#D4A843" strokeWidth={2.5} fill="url(#goldGrad)"
-                  dot={{ r: 3, fill: "#D4A843", stroke: "#0B1120", strokeWidth: 2 }}
-                  activeDot={{ r: 5, fill: "#D4A843" }}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
 
       {/* ── Desktop: Events (hidden on mobile) ────────────────────────── */}
-      <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="font-heading font-bold text-white text-base flex items-center gap-2">
-            <Trophy className="size-4 text-[#D4A843]" />
-            Event Mendatang
-          </h2>
-          <Link href="/events" className="text-[11px] text-[#D4A843] font-medium flex items-center gap-0.5">
-            Lihat semua <ChevronRight className="size-3.5" />
-          </Link>
-        </div>
+      {upcomingEvents.length > 0 && (
+        <motion.div custom={5} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-heading font-bold text-white text-base flex items-center gap-2">
+              <Trophy className="size-4 text-[#D4A843]" />
+              Event Mendatang
+            </h2>
+            <Link href="/events" className="text-[11px] text-[#D4A843] font-medium flex items-center gap-0.5">
+              Lihat semua <ChevronRight className="size-3.5" />
+            </Link>
+          </div>
 
-        <div className="space-y-2.5">
-          {upcomingEvents.map((ev) => (
-            <div key={ev.id} className={`rounded-2xl bg-gradient-to-br ${ev.gradient} border border-white/10 p-4`}>
-              <div className="flex items-start justify-between">
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-white text-sm truncate">{ev.title}</h3>
-                  <div className="flex items-center gap-3 mt-1.5 text-[11px] text-white/50">
-                    <span className="flex items-center gap-1"><Calendar className="size-3" />{ev.date}</span>
-                    <span className="flex items-center gap-1"><Users className="size-3" />{ev.slots} slot</span>
+          <div className="space-y-2.5">
+            {upcomingEvents.map((ev) => (
+              <div key={ev.id} className={`rounded-2xl bg-gradient-to-br ${ev.gradient} border border-white/10 p-4`}>
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-white text-sm truncate">{ev.title}</h3>
+                    <div className="flex items-center gap-3 mt-1.5 text-[11px] text-white/50">
+                      <span className="flex items-center gap-1"><Calendar className="size-3" />{ev.date}</span>
+                      <span className="flex items-center gap-1"><Users className="size-3" />{ev.slots} slot</span>
+                    </div>
                   </div>
+                  <TierBadge tier={ev.minTier} size="sm" />
                 </div>
-                <TierBadge tier={ev.minTier} size="sm" />
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/60">
+                    {ev.format}
+                  </span>
+                  <button className="flex items-center gap-1 text-xs font-bold text-[#D4A843] bg-[#D4A843]/10 hover:bg-[#D4A843]/20 px-3 py-1.5 rounded-xl transition-colors">
+                    <Gamepad2 className="size-3.5" /> Daftar
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center justify-between mt-3">
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-white/10 text-white/60">
-                  {ev.format}
-                </span>
-                <button className="flex items-center gap-1 text-xs font-bold text-[#D4A843] bg-[#D4A843]/10 hover:bg-[#D4A843]/20 px-3 py-1.5 rounded-xl transition-colors">
-                  <Gamepad2 className="size-3.5" /> Daftar
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Desktop: Recent Activity (hidden on mobile) ────────────────── */}
-      <motion.div custom={6} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block pb-2">
-        <h2 className="font-heading font-bold text-white text-base mb-3 flex items-center gap-2">
-          <Zap className="size-4 text-[#D4A843]" />
-          Aktivitas Terbaru
-        </h2>
-        <div className="rounded-2xl bg-[#1A2332] border border-white/[0.06] overflow-hidden divide-y divide-white/[0.05]">
-          {activityFeed.map((a) => (
-            <div key={a.id} className="flex items-center gap-3 px-4 py-3">
-              <div className={`shrink-0 size-8 rounded-xl ${a.bg} flex items-center justify-center`}>
-                <a.icon className={`size-4 ${a.iconColor}`} />
+      {activityFeed.length > 0 && (
+        <motion.div custom={6} variants={fadeUp} initial="hidden" animate="show" className="hidden md:block pb-2">
+          <h2 className="font-heading font-bold text-white text-base mb-3 flex items-center gap-2">
+            <Zap className="size-4 text-[#D4A843]" />
+            Aktivitas Terbaru
+          </h2>
+          <div className="rounded-2xl bg-[#1A2332] border border-white/[0.06] overflow-hidden divide-y divide-white/[0.05]">
+            {activityFeed.map((a) => (
+              <div key={a.id} className="flex items-center gap-3 px-4 py-3">
+                <div className={`shrink-0 size-8 rounded-xl ${a.bg} flex items-center justify-center`}>
+                  <a.icon className={`size-4 ${a.iconColor}`} />
+                </div>
+                <p className="flex-1 text-[13px] text-white/70 min-w-0 line-clamp-1">{a.text}</p>
+                <span className="text-[10px] text-white/30 shrink-0">{a.time}</span>
               </div>
-              <p className="flex-1 text-[13px] text-white/70 min-w-0 line-clamp-1">{a.text}</p>
-              <span className="text-[10px] text-white/30 shrink-0">{a.time}</span>
-            </div>
-          ))}
-        </div>
-      </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
     </div>
   );
