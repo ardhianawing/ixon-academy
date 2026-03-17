@@ -12,6 +12,7 @@ import {
   Monitor,
   Bed,
   CheckCircle2,
+  Loader2,
 } from "lucide-react";
 import {
   LineChart,
@@ -25,18 +26,9 @@ import {
   CartesianGrid,
 } from "recharts";
 import { toast } from "sonner";
+import { useWellnessData } from "@/hooks/useWellnessData";
 
-// ── Mock Data ────────────────────────────────────────────────────────────────
-
-const sleepData = [
-  { day: "Sen", hours: 7, mood: 4 },
-  { day: "Sel", hours: 6, mood: 3 },
-  { day: "Rab", hours: 8, mood: 5 },
-  { day: "Kam", hours: 5, mood: 2 },
-  { day: "Jum", hours: 7, mood: 4 },
-  { day: "Sab", hours: 9, mood: 5 },
-  { day: "Min", hours: 7, mood: 4 },
-];
+// ── UI Constants ─────────────────────────────────────────────────────────────
 
 const moodEmojis = [
   { emoji: "\ud83d\ude2b", label: "Sangat Buruk", value: 1 },
@@ -46,32 +38,11 @@ const moodEmojis = [
   { emoji: "\ud83d\ude04", label: "Sangat Baik", value: 5 },
 ];
 
-const tips = [
-  {
-    icon: Monitor,
-    iconColor: "text-blue-400",
-    bgColor: "bg-blue-500/10",
-    title: "Ergonomi Gaming",
-    description:
-      "Pastikan monitor sejajar mata, kursi menopang punggung bawah, dan siku membentuk sudut 90 derajat. Gunakan wrist rest untuk mouse dan keyboard.",
-  },
-  {
-    icon: Bed,
-    iconColor: "text-purple-400",
-    bgColor: "bg-purple-500/10",
-    title: "Sleep Hygiene",
-    description:
-      "Hindari layar 30 menit sebelum tidur. Tidur 7-9 jam per malam. Suhu ruangan ideal 18-22°C untuk tidur berkualitas.",
-  },
-  {
-    icon: Eye,
-    iconColor: "text-emerald-400",
-    bgColor: "bg-emerald-500/10",
-    title: "Eye Care",
-    description:
-      "Terapkan aturan 20-20-20: setiap 20 menit, lihat objek 20 feet jauhnya selama 20 detik. Gunakan blue light filter saat malam.",
-  },
-];
+const TIP_UI_MAP: Record<string, { icon: React.ComponentType<{ className?: string }>; iconColor: string; bgColor: string }> = {
+  "Ergonomi Gaming": { icon: Monitor, iconColor: "text-blue-400", bgColor: "bg-blue-500/10" },
+  "Sleep Hygiene": { icon: Bed, iconColor: "text-purple-400", bgColor: "bg-purple-500/10" },
+  "Eye Care": { icon: Eye, iconColor: "text-emerald-400", bgColor: "bg-emerald-500/10" },
+};
 
 type HandCondition = "baik" | "kurang" | "sakit";
 
@@ -122,6 +93,7 @@ function ToggleButton({
 // ── Page Component ───────────────────────────────────────────────────────────
 
 export default function WellnessPage() {
+  const { data, loading } = useWellnessData();
   const [sleepHours, setSleepHours] = useState(7);
   const [exercised, setExercised] = useState(false);
   const [eyeRest, setEyeRest] = useState(false);
@@ -133,6 +105,20 @@ export default function WellnessPage() {
       description: "Data kesehatanmu telah dicatat. Tetap jaga kesehatanmu!",
     });
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const sleepData = data.sleepHistory;
+  const tips = data.tips.map((tip) => {
+    const ui = TIP_UI_MAP[tip.title] ?? { icon: Monitor, iconColor: "text-blue-400", bgColor: "bg-blue-500/10" };
+    return { ...tip, ...ui };
+  });
 
   return (
     <motion.div

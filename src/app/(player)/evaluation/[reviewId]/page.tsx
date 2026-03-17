@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { use, useState } from "react";
 import { motion } from "framer-motion";
 import {
   ResponsiveContainer,
@@ -17,49 +17,11 @@ import {
   TrendingUp,
   CheckSquare,
   MessageSquare,
+  Loader2,
 } from "lucide-react";
+import { useReviewDetailData } from "@/hooks/useReviewDetailData";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const reviewData = {
-  hero: "Hayabusa",
-  game: "MLBB",
-  date: "8 Maret 2026",
-  coachName: "Coach Alex",
-  coachInitial: "A",
-  overallScore: 3.6,
-  scores: [
-    { label: "Mechanical Skill", value: 4, max: 5, pct: 80, color: "#D4A843" },
-    { label: "Game Sense", value: 3, max: 5, pct: 60, color: "#3B82F6" },
-    { label: "Hero Mastery", value: 4, max: 5, pct: 80, color: "#8B5CF6" },
-    { label: "Teamwork", value: 3, max: 5, pct: 60, color: "#10B981" },
-    { label: "Mental", value: 4, max: 5, pct: 80, color: "#F59E0B" },
-  ],
-  feedback: `Secara keseluruhan, gameplay Hayabusa kamu sudah menunjukkan pemahaman yang baik tentang peran jungler. Timing retribution untuk Lithowanderer di early game cukup konsisten, dan kamu berhasil mengamankan buff pertama tanpa kehilangan banyak HP.
-
-Namun, ada beberapa area yang perlu diperbaiki. Pertama, dari segi pathing jungle, kamu terlalu sering mengulang rute yang sama sehingga musuh bisa memprediksi posisi kamu. Cobalah variasikan pathing terutama setelah menit ke-5 ketika musuh sudah mulai membaca pola kamu.
-
-Kedua, timing retribution untuk Turtle dan Lord masih perlu ditingkatkan. Di menit ke-8, kamu kehilangan Turtle karena retribution terlalu cepat - sebaiknya tunggu HP Turtle di bawah threshold damage retribution. Gunakan indikator HP bar sebagai referensi.
-
-Dari sisi map awareness, kamu sudah cukup aktif melihat minimap, tapi rotasi ke lane yang sedang di-gank oleh musuh masih lambat sekitar 3-5 detik. Hal ini bisa diperbaiki dengan lebih sering mengecek minimap setiap 3 detik.
-
-Komunikasi dengan roamer juga perlu ditingkatkan. Beberapa gank yang gagal terjadi karena kurangnya koordinasi - misalnya di menit ke-12 saat kamu mau gank midlane tapi roamer sedang di botlane. Gunakan quick chat atau voice lebih aktif.
-
-Overall, kamu sudah di jalur yang benar. Dengan latihan yang konsisten terutama di area timing retribution dan rotasi, Talent Score kamu bisa naik signifikan dalam beberapa minggu ke depan.`,
-  improvementPlan: [
-    "Fokus latihan timing retribution saat Turtle/Lord spawn",
-    "Review replay sendiri minimal 1x sebelum submit gameplay berikutnya",
-    "Perbanyak komunikasi dengan roamer untuk setup gank",
-  ],
-};
-
-const comparisonData = [
-  { aspect: "Mechanical", current: 80, previous: 70 },
-  { aspect: "Game Sense", current: 60, previous: 55 },
-  { aspect: "Hero Mastery", current: 80, previous: 65 },
-  { aspect: "Teamwork", current: 60, previous: 50 },
-  { aspect: "Mental", current: 80, previous: 75 },
-];
+// ─── Rating Aspects (static config) ─────────────────────────────────────────
 
 const ratingAspects = [
   "Clarity",
@@ -112,11 +74,26 @@ function StarRating({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function ReviewDetailPage() {
+export default function ReviewDetailPage({
+  params,
+}: {
+  params: Promise<{ reviewId: string }>;
+}) {
+  const { reviewId } = use(params);
+  const { data, loading } = useReviewDetailData(reviewId);
+
   const [checkedItems, setCheckedItems] = useState<boolean[]>(
-    reviewData.improvementPlan.map(() => false)
+    data.improvementPlan.map(() => false)
   );
   const [ratings, setRatings] = useState<Record<string, number>>({});
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   const toggleCheck = (idx: number) => {
     setCheckedItems((prev) => {
@@ -147,16 +124,16 @@ export default function ReviewDetailPage() {
           <div className="flex items-center gap-4 flex-1 min-w-0">
             <div className="size-14 rounded-xl bg-gradient-to-br from-[#D4A843]/20 to-[#D4A843]/5 flex items-center justify-center shrink-0">
               <span className="text-2xl font-bold text-[#D4A843]">
-                {reviewData.hero[0]}
+                {data.hero[0]}
               </span>
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="font-heading font-bold text-xl text-foreground">
-                  {reviewData.hero}
+                  {data.hero}
                 </h1>
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-400">
-                  {reviewData.game}
+                  {data.game}
                 </span>
                 <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">
                   Completed
@@ -165,7 +142,7 @@ export default function ReviewDetailPage() {
               <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Calendar className="size-3" />
-                  {reviewData.date}
+                  {data.date}
                 </span>
               </div>
             </div>
@@ -178,7 +155,7 @@ export default function ReviewDetailPage() {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">
-                {reviewData.coachName}
+                {data.coach.name}
               </p>
               <p className="text-xs text-muted-foreground">Reviewer</p>
             </div>
@@ -196,7 +173,7 @@ export default function ReviewDetailPage() {
         </h2>
 
         <div className="space-y-4">
-          {reviewData.scores.map((s) => (
+          {data.scores.map((s) => (
             <div key={s.label} className="space-y-1.5">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-foreground font-medium">{s.label}</span>
@@ -223,7 +200,7 @@ export default function ReviewDetailPage() {
             Overall Score
           </span>
           <span className="font-heading font-bold text-3xl text-[#D4A843]">
-            {reviewData.overallScore}/5
+            {data.overallScore}/5
           </span>
         </div>
       </motion.section>
@@ -238,7 +215,7 @@ export default function ReviewDetailPage() {
           Feedback Coach
         </h2>
         <div className="text-sm text-muted-foreground leading-relaxed whitespace-pre-line">
-          {reviewData.feedback}
+          {data.feedback}
         </div>
       </motion.section>
 
@@ -252,7 +229,7 @@ export default function ReviewDetailPage() {
           Improvement Plan
         </h2>
         <div className="space-y-3">
-          {reviewData.improvementPlan.map((plan, idx) => (
+          {data.improvementPlan.map((plan, idx) => (
             <label
               key={idx}
               className={`flex items-start gap-3 rounded-xl border p-4 cursor-pointer transition-all ${
@@ -317,7 +294,7 @@ export default function ReviewDetailPage() {
         </h2>
         <div className="h-[220px]">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={comparisonData} barGap={4}>
+            <BarChart data={data.comparisonData} barGap={4}>
               <XAxis
                 dataKey="aspect"
                 tick={{ fill: "rgba(255,255,255,0.5)", fontSize: 11 }}

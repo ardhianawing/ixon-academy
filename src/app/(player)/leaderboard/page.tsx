@@ -12,90 +12,18 @@ import {
   Star,
   MessageCircle,
   TrendingUp,
+  Loader2,
 } from "lucide-react";
 
 import { TierBadge } from "@/components/ui/TierBadge";
 import { GameBadge } from "@/components/ui/GameBadge";
+import { useLeaderboardData, type Player } from "@/hooks/useLeaderboardData";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type TabKey = "talent" | "xp" | "reputation";
 type GameFilter = "all" | "mlbb" | "ff";
 type TimeFilter = "week" | "month" | "all-time";
-
-interface Player {
-  id: number;
-  nickname: string;
-  initials: string;
-  tier: string;
-  game: string;
-  role: string;
-  talentScore: number;
-  xp: number;
-  reputation: number;
-  isCurrentUser?: boolean;
-}
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const PLAYERS: Player[] = [
-  {
-    id: 1,
-    nickname: "PhoenixBlade",
-    initials: "PB",
-    tier: "PLATINUM",
-    game: "MLBB",
-    role: "Gold Laner",
-    talentScore: 87,
-    xp: 12450,
-    reputation: 342,
-  },
-  {
-    id: 2,
-    nickname: "TENSAI",
-    initials: "TE",
-    tier: "GOLD",
-    game: "MLBB",
-    role: "Jungler",
-    talentScore: 78,
-    xp: 9800,
-    reputation: 256,
-    isCurrentUser: true,
-  },
-  {
-    id: 3,
-    nickname: "IXONReaper",
-    initials: "IR",
-    tier: "SILVER",
-    game: "MLBB",
-    role: "EXP Laner",
-    talentScore: 72,
-    xp: 8300,
-    reputation: 198,
-  },
-  {
-    id: 4,
-    nickname: "ShadowFF",
-    initials: "SF",
-    tier: "GOLD",
-    game: "FF",
-    role: "Rusher",
-    talentScore: 65,
-    xp: 6700,
-    reputation: 145,
-  },
-  {
-    id: 5,
-    nickname: "AceHunter",
-    initials: "AH",
-    tier: "SILVER",
-    game: "MLBB",
-    role: "Mid Laner",
-    talentScore: 45,
-    xp: 3200,
-    reputation: 67,
-  },
-];
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "talent", label: "Talent Score", icon: Star },
@@ -154,12 +82,23 @@ const rankMedals = ["", "\uD83E\uDD47", "\uD83E\uDD48", "\uD83E\uDD49"];
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function LeaderboardPage() {
+  const { data: players, loading } = useLeaderboardData();
   const [activeTab, setActiveTab] = useState<TabKey>("talent");
   const [gameFilter, setGameFilter] = useState<GameFilter>("all");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("week");
   const [showFilters, setShowFilters] = useState(false);
 
-  const filtered = PLAYERS.filter((p) => {
+  const currentUser = players.find((p) => p.isCurrentUser);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh]">
+        <Loader2 className="size-8 animate-spin text-[#D4A843]" />
+      </div>
+    );
+  }
+
+  const filtered = players.filter((p) => {
     if (gameFilter === "mlbb") return p.game === "MLBB";
     if (gameFilter === "ff") return p.game === "FF";
     return true;
@@ -422,31 +361,44 @@ export default function LeaderboardPage() {
       )}
 
       {/* ─── Current User Position (if not in top visible) ───────────── */}
-      <motion.section variants={item} className="pb-4">
-        <div className="rounded-xl border border-[#D4A843]/20 bg-[#D4A843]/5 p-4 flex items-center gap-4">
-          <div className="size-10 rounded-full bg-gradient-to-br from-[#D4A843] to-[#B8922E] flex items-center justify-center text-sm font-bold text-black shrink-0">
-            TE
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="font-semibold text-[#D4A843]">Posisi Kamu</p>
-            <p className="text-xs text-muted-foreground">
-              Rank #2 dari {filtered.length} pemain
-            </p>
-          </div>
-          <div className="text-right shrink-0">
-            <p className="font-heading font-bold text-[#D4A843] text-lg">
-              {formatScore(getScoreForTab(PLAYERS[1], activeTab), activeTab)}
-            </p>
-            <p className="text-[10px] text-muted-foreground">
-              {activeTab === "talent"
-                ? "9 poin ke #1"
-                : activeTab === "xp"
-                  ? "2.650 XP ke #1"
-                  : "86 Rep ke #1"}
-            </p>
-          </div>
-        </div>
-      </motion.section>
+      {currentUser && (() => {
+        const currentUserRank = filtered.findIndex((p) => p.isCurrentUser) + 1;
+        const topScore = filtered.length > 0 ? getScoreForTab(filtered[0], activeTab) : 0;
+        const myScore = getScoreForTab(currentUser, activeTab);
+        const gap = topScore - myScore;
+        const gapLabel =
+          activeTab === "xp"
+            ? `${gap.toLocaleString()} XP ke #1`
+            : activeTab === "reputation"
+              ? `${gap.toLocaleString()} Rep ke #1`
+              : `${gap} poin ke #1`;
+
+        return (
+          <motion.section variants={item} className="pb-4">
+            <div className="rounded-xl border border-[#D4A843]/20 bg-[#D4A843]/5 p-4 flex items-center gap-4">
+              <div className="size-10 rounded-full bg-gradient-to-br from-[#D4A843] to-[#B8922E] flex items-center justify-center text-sm font-bold text-black shrink-0">
+                {currentUser.initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-[#D4A843]">Posisi Kamu</p>
+                <p className="text-xs text-muted-foreground">
+                  Rank #{currentUserRank} dari {filtered.length} pemain
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p className="font-heading font-bold text-[#D4A843] text-lg">
+                  {formatScore(myScore, activeTab)}
+                </p>
+                {currentUserRank > 1 && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {gapLabel}
+                  </p>
+                )}
+              </div>
+            </div>
+          </motion.section>
+        );
+      })()}
     </motion.div>
   );
 }

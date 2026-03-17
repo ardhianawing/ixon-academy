@@ -13,66 +13,14 @@ import {
   Clock,
   CheckCircle2,
   Eye,
+  Loader2,
 } from "lucide-react";
 
 import { TierBadge } from "@/components/ui/TierBadge";
 import { GameBadge } from "@/components/ui/GameBadge";
+import { useEventsData, type EventStatus } from "@/hooks/useEventsData";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-type EventStatus = "upcoming" | "live" | "completed";
-
-interface EventItem {
-  id: string;
-  title: string;
-  status: EventStatus;
-  date: string;
-  format: string;
-  game: string;
-  minTier: string;
-  slots: string;
-  slotsTotal: number;
-  slotsFilled: number;
-}
-
-const events: EventItem[] = [
-  {
-    id: "weekly-scrim-12",
-    title: "IXON Weekly Scrim #12",
-    status: "upcoming",
-    date: "15 Mar 2026",
-    format: "5v5",
-    game: "MLBB",
-    minTier: "SILVER",
-    slots: "24/32 slot",
-    slotsTotal: 32,
-    slotsFilled: 24,
-  },
-  {
-    id: "rookie-tournament-s1",
-    title: "IXON Rookie Tournament S1",
-    status: "upcoming",
-    date: "22 Mar 2026",
-    format: "Tournament 5v5",
-    game: "MLBB",
-    minTier: "GOLD",
-    slots: "12/16 slot",
-    slotsTotal: 16,
-    slotsFilled: 12,
-  },
-  {
-    id: "solo-showdown-1",
-    title: "1v1 Solo Showdown",
-    status: "completed",
-    date: "1 Mar 2026",
-    format: "1v1",
-    game: "MLBB",
-    minTier: "FREE",
-    slots: "32/32 slot",
-    slotsTotal: 32,
-    slotsFilled: 32,
-  },
-];
+// ─── Tabs Config ─────────────────────────────────────────────────────────────
 
 const tabs: { key: EventStatus; label: string; icon: React.ElementType }[] = [
   { key: "upcoming", label: "Upcoming", icon: Clock },
@@ -119,7 +67,16 @@ const item = {
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function EventsPage() {
+  const { data: events, loading } = useEventsData();
   const [activeTab, setActiveTab] = useState<EventStatus>("upcoming");
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   const filtered = events.filter((e) => e.status === activeTab);
 
@@ -200,7 +157,7 @@ export default function EventsPage() {
                 </span>
                 <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-white/5 text-muted-foreground flex items-center gap-1">
                   <Users className="size-3" />
-                  {ev.slots}
+                  {ev.filledSlots}/{ev.maxSlots} slot
                 </span>
                 <TierBadge tier={ev.minTier} size="sm" />
                 <span className="text-[10px] text-muted-foreground">
@@ -213,14 +170,14 @@ export default function EventsPage() {
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Slot terisi</span>
                   <span className="text-foreground font-medium">
-                    {ev.slotsFilled}/{ev.slotsTotal}
+                    {ev.filledSlots}/{ev.maxSlots}
                   </span>
                 </div>
                 <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
                   <div
                     className="h-full rounded-full bg-[#D4A843] transition-all duration-500"
                     style={{
-                      width: `${(ev.slotsFilled / ev.slotsTotal) * 100}%`,
+                      width: `${(ev.filledSlots / ev.maxSlots) * 100}%`,
                     }}
                   />
                 </div>

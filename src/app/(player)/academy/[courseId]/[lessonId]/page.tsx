@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { use, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -13,64 +12,24 @@ import {
   Lock,
   BookOpen,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLessonData } from "@/hooks/useLessonData";
+import { useCourseDetailData } from "@/hooks/useCourseDetailData";
+import type { LessonSummary } from "@/hooks/useCourseDetailData";
 
-/* ──────────────────────── Types ──────────────────────── */
+/* ──────────────────────── Helpers ──────────────────────── */
 
-interface LessonData {
-  id: string;
-  number: string;
-  title: string;
-  duration: string;
-  status: "completed" | "current" | "locked";
-  description: string;
-  moduleTitle: string;
+function getLessonStatus(
+  lesson: LessonSummary,
+  isFirstIncomplete: boolean
+): "completed" | "current" | "locked" {
+  if (lesson.completed) return "completed";
+  if (lesson.locked) return "locked";
+  if (isFirstIncomplete) return "current";
+  return "locked";
 }
-
-/* ──────────────────────── Mock Data ──────────────────────── */
-
-const allLessons: LessonData[] = [
-  {
-    id: "lesson-1-1",
-    number: "1.1",
-    title: "Pengenalan Role Jungler",
-    duration: "8:30",
-    status: "completed",
-    description:
-      "Pelajari dasar-dasar role jungler di Mobile Legends. Dalam lesson ini kita akan membahas tugas utama jungler, kapan harus farming vs ganking, serta hero-hero jungler yang cocok untuk pemula. Kamu akan memahami mengapa jungler adalah role paling impactful di game.",
-    moduleTitle: "Fundamental",
-  },
-  {
-    id: "lesson-1-2",
-    number: "1.2",
-    title: "Pathing Dasar",
-    duration: "12:15",
-    status: "completed",
-    description:
-      "Menguasai jungle pathing adalah kunci efisiensi farming. Kita akan breakdown pathing optimal untuk early game, termasuk buff rotation, creep priority, dan kapan switch ke lane untuk gank. Disertai diagram pathing dan contoh dari pro player.",
-    moduleTitle: "Fundamental",
-  },
-  {
-    id: "lesson-1-3",
-    number: "1.3",
-    title: "Timing Objective",
-    duration: "10:45",
-    status: "current",
-    description:
-      "Turtle dan Lord adalah objective yang bisa menentukan jalannya game. Di lesson ini kamu akan belajar kapan waktu ideal untuk ambil turtle, bagaimana setup vision sebelum Lord, dan timing retribution yang sempurna. Termasuk analisis replay dari pertandingan MDL.",
-    moduleTitle: "Fundamental",
-  },
-  {
-    id: "lesson-1-4",
-    number: "1.4",
-    title: "Quiz Modul 1",
-    duration: "",
-    status: "locked",
-    description: "Quiz untuk menguji pemahaman kamu tentang fundamental jungling.",
-    moduleTitle: "Fundamental",
-  },
-];
 
 /* ──────────────────────── Sidebar Lesson Item ──────────────────────── */
 
@@ -78,12 +37,16 @@ function SidebarLessonItem({
   lesson,
   courseId,
   isActive,
+  number,
+  status,
 }: {
-  lesson: LessonData;
+  lesson: LessonSummary;
   courseId: string;
   isActive: boolean;
+  number: string;
+  status: "completed" | "current" | "locked";
 }) {
-  const isClickable = lesson.status !== "locked";
+  const isClickable = status !== "locked";
 
   const content = (
     <div
@@ -95,9 +58,9 @@ function SidebarLessonItem({
           : "opacity-40 cursor-not-allowed"
       }`}
     >
-      {lesson.status === "completed" ? (
+      {status === "completed" ? (
         <CheckCircle2 className="size-4 shrink-0 text-emerald-400" />
-      ) : lesson.status === "current" ? (
+      ) : status === "current" ? (
         <PlayCircle className="size-4 shrink-0 text-[#D4A843]" />
       ) : (
         <Lock className="size-3.5 shrink-0 text-[#475569]" />
@@ -107,26 +70,24 @@ function SidebarLessonItem({
           className={`text-xs font-medium truncate ${
             isActive
               ? "text-[#D4A843]"
-              : lesson.status === "completed"
+              : status === "completed"
               ? "text-white/80"
               : "text-[#475569]"
           }`}
         >
-          {lesson.number}: {lesson.title}
+          {number}: {lesson.title}
         </span>
-        {lesson.duration && (
-          <span className="text-[10px] text-[#64748B]">{lesson.duration}</span>
+        {lesson.duration > 0 && (
+          <span className="text-[10px] text-[#64748B]">
+            {lesson.duration}:00
+          </span>
         )}
       </div>
     </div>
   );
 
   if (isClickable) {
-    return (
-      <Link href={`/academy/${courseId}/${lesson.id}`}>
-        {content}
-      </Link>
-    );
+    return <Link href={`/academy/${courseId}/${lesson.id}`}>{content}</Link>;
   }
 
   return content;
@@ -134,19 +95,57 @@ function SidebarLessonItem({
 
 /* ──────────────────────── Main Page ──────────────────────── */
 
-export default function LessonPlayerPage() {
-  const params = useParams();
-  const courseId = params.courseId as string;
-  const lessonId = params.lessonId as string;
+export default function LessonPlayerPage({
+  params,
+}: {
+  params: Promise<{ courseId: string; lessonId: string }>;
+}) {
+  const { courseId, lessonId } = use(params);
+
+  const { data: lesson, loading: lessonLoading } = useLessonData(lessonId);
+  const { data: course, loading: courseLoading } =
+    useCourseDetailData(courseId);
 
   const [isCompleted, setIsCompleted] = useState(false);
 
-  // Find current lesson (fallback to lesson-1-3)
-  const currentLesson =
-    allLessons.find((l) => l.id === lessonId) ?? allLessons[2]!;
+  if (lessonLoading || courseLoading) {
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-[#D4A843]" />
+      </div>
+    );
+  }
 
-  const currentIndex = allLessons.findIndex((l) => l.id === currentLesson.id);
-  const nextLesson = allLessons[currentIndex + 1] ?? null;
+  // Build sidebar lesson list with status from course data
+  let foundFirstIncomplete = false;
+  const sidebarLessons = course.modules.flatMap((mod, modIdx) =>
+    mod.lessons.map((l, lesIdx) => {
+      const isFirstIncomplete =
+        !foundFirstIncomplete && !l.completed && !l.locked;
+      if (isFirstIncomplete) foundFirstIncomplete = true;
+      const status = getLessonStatus(l, isFirstIncomplete);
+      const number = `${modIdx + 1}.${lesIdx + 1}`;
+      return { ...l, status, number };
+    })
+  );
+
+  const completedCount = sidebarLessons.filter(
+    (l) => l.status === "completed"
+  ).length;
+  const totalCount = sidebarLessons.length;
+
+  // Navigation
+  const nextLessonId = lesson.nextLessonId;
+  const nextLessonData = nextLessonId
+    ? sidebarLessons.find((l) => l.id === nextLessonId)
+    : null;
+  const nextLessonLocked = nextLessonData
+    ? nextLessonData.status === "locked"
+    : false;
+
+  // Format duration
+  const durationStr =
+    lesson.duration > 0 ? `${lesson.duration}:00` : "";
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -196,9 +195,9 @@ export default function LessonPlayerPage() {
             </div>
 
             {/* Duration badge */}
-            {currentLesson.duration && (
+            {durationStr && (
               <div className="absolute bottom-3 right-3 rounded-md bg-black/70 px-2 py-1 text-xs font-medium text-white/80">
-                {currentLesson.duration}
+                {durationStr}
               </div>
             )}
           </motion.div>
@@ -213,20 +212,22 @@ export default function LessonPlayerPage() {
             {/* Module tag */}
             <div className="flex items-center gap-2">
               <span className="rounded-full bg-[#D4A843]/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-[#D4A843]">
-                {currentLesson.moduleTitle}
+                {lesson.moduleTitle}
               </span>
               <span className="text-xs text-[#64748B]">
-                Lesson {currentLesson.number}
+                Lesson {lesson.id}
               </span>
             </div>
 
             <h1 className="text-lg font-bold text-white sm:text-xl">
-              {currentLesson.title}
+              {lesson.title}
             </h1>
 
-            <p className="text-sm leading-relaxed text-[#94A3B8]">
-              {currentLesson.description}
-            </p>
+            {lesson.content && (
+              <p className="text-sm leading-relaxed text-[#94A3B8]">
+                {lesson.content}
+              </p>
+            )}
           </motion.div>
 
           {/* Action Buttons */}
@@ -257,18 +258,18 @@ export default function LessonPlayerPage() {
               )}
             </Button>
 
-            {nextLesson && nextLesson.status !== "locked" ? (
+            {nextLessonId && !nextLessonLocked ? (
               <Button
                 variant="outline"
                 className="h-11 gap-2 rounded-xl border-white/10 px-6 text-sm font-semibold text-white hover:bg-white/5"
                 render={
-                  <Link href={`/academy/${courseId}/${nextLesson.id}`} />
+                  <Link href={`/academy/${courseId}/${nextLessonId}`} />
                 }
               >
                 Lesson Berikutnya
                 <ArrowRight className="size-4" />
               </Button>
-            ) : nextLesson ? (
+            ) : nextLessonId ? (
               <Button
                 variant="outline"
                 className="h-11 gap-2 rounded-xl border-white/5 px-6 text-sm text-[#475569] cursor-not-allowed"
@@ -295,12 +296,14 @@ export default function LessonPlayerPage() {
             </div>
 
             <div className="space-y-1">
-              {allLessons.map((lesson) => (
+              {sidebarLessons.map((sl) => (
                 <SidebarLessonItem
-                  key={lesson.id}
-                  lesson={lesson}
+                  key={sl.id}
+                  lesson={sl}
                   courseId={courseId}
-                  isActive={lesson.id === currentLesson.id}
+                  isActive={sl.id === lesson.id}
+                  number={sl.number}
+                  status={sl.status}
                 />
               ))}
             </div>
@@ -310,8 +313,7 @@ export default function LessonPlayerPage() {
               <div className="flex items-center justify-between text-[10px] font-medium">
                 <span className="text-[#94A3B8]">Progress</span>
                 <span className="text-[#D4A843]">
-                  {allLessons.filter((l) => l.status === "completed").length}/
-                  {allLessons.length}
+                  {completedCount}/{totalCount}
                 </span>
               </div>
               <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-white/10">
@@ -319,9 +321,9 @@ export default function LessonPlayerPage() {
                   className="h-full rounded-full bg-gradient-to-r from-[#D4A843] to-[#F0DCA0]"
                   style={{
                     width: `${
-                      (allLessons.filter((l) => l.status === "completed").length /
-                        allLessons.length) *
-                      100
+                      totalCount > 0
+                        ? (completedCount / totalCount) * 100
+                        : 0
                     }%`,
                   }}
                 />

@@ -10,52 +10,11 @@ import {
   PlayCircle,
   FileText,
   Clock,
+  Loader2,
 } from "lucide-react";
+import { useMentalData } from "@/hooks/useMentalData";
 
-// ── Mock Data ────────────────────────────────────────────────────────────────
-
-const resources = [
-  {
-    id: 1,
-    emoji: "\ud83e\uddd8",
-    title: "Mengatasi Tilt Setelah Losing Streak",
-    type: "article" as const,
-    readTime: "8 min",
-    description:
-      "Strategi mental untuk kembali fokus setelah kekalahan beruntun. Pelajari teknik grounding dan reset mindset.",
-    tags: ["Tilt", "Mental Reset"],
-  },
-  {
-    id: 2,
-    emoji: "\ud83c\udfaf",
-    title: "Fokus & Konsentrasi Saat Match Penting",
-    type: "video" as const,
-    readTime: "12 min",
-    description:
-      "Video panduan teknik konsentrasi dari sport psychologist. Termasuk breathing exercise dan visualization.",
-    tags: ["Fokus", "Big Match"],
-  },
-  {
-    id: 3,
-    emoji: "\ud83d\ude24",
-    title: "Performance Anxiety: Cara Mengatasinya",
-    type: "article" as const,
-    readTime: "10 min",
-    description:
-      "Kenali gejala performance anxiety dan pelajari cara mengatasinya agar performa tetap optimal.",
-    tags: ["Anxiety", "Performa"],
-  },
-  {
-    id: 4,
-    emoji: "\ud83d\udd25",
-    title: "Menghindari Burnout sebagai Gamer Kompetitif",
-    type: "article" as const,
-    readTime: "7 min",
-    description:
-      "Cara menjaga semangat bermain tanpa mengorbankan kesehatan mental. Tips dari pro player.",
-    tags: ["Burnout", "Self-care"],
-  },
-];
+// ── UI Constants ─────────────────────────────────────────────────────────────
 
 const moodEmojis = [
   { emoji: "\ud83d\ude2b", label: "Sangat Buruk", value: 1 },
@@ -83,8 +42,17 @@ const item = {
 // ── Page Component ───────────────────────────────────────────────────────────
 
 export default function MentalPage() {
+  const { data: resources, loading } = useMentalData();
   const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   const toggleBookmark = (id: number) => {
     setBookmarked((prev) => {

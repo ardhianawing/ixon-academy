@@ -11,12 +11,14 @@ import {
   Target,
   BookOpen,
   MessageCircle,
+  Loader2,
 } from "lucide-react";
+import { useMissionsData } from "@/hooks/useMissionsData";
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
-interface Mission {
-  id: number;
+interface MissionUI {
+  id: string;
   emoji: string;
   title: string;
   xp: number;
@@ -25,37 +27,18 @@ interface Mission {
   icon: React.ElementType;
 }
 
-const dailyMissions: Mission[] = [
-  {
-    id: 1,
-    emoji: "🎯",
-    title: "Login Hari Ini",
-    xp: 10,
-    status: "completed",
-    progress: "1/1",
-    icon: Target,
-  },
-  {
-    id: 2,
-    emoji: "📚",
-    title: "Selesaikan 1 Lesson",
-    xp: 25,
-    status: "in-progress",
-    progress: "0/1",
-    icon: BookOpen,
-  },
-  {
-    id: 3,
-    emoji: "💬",
-    title: "Reply di Forum",
-    xp: 15,
-    status: "not-started",
-    progress: "0/1",
-    icon: MessageCircle,
-  },
-];
+// ─── Icon / Emoji mapping by mission type ────────────────────────────────────
 
-const STREAK_DAYS = 7;
+const MISSION_TYPE_MAP: Record<
+  string,
+  { icon: React.ElementType; emoji: string }
+> = {
+  login: { icon: Target, emoji: "🎯" },
+  lesson: { icon: BookOpen, emoji: "📚" },
+  community: { icon: MessageCircle, emoji: "💬" },
+};
+
+const DEFAULT_TYPE_MAP = { icon: Target, emoji: "🎯" };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -135,7 +118,7 @@ function XPPop({ xp }: { xp: number }) {
 
 // ─── Progress Bar ─────────────────────────────────────────────────────────────
 
-function MissionProgressBar({ status }: { status: Mission["status"] }) {
+function MissionProgressBar({ status }: { status: MissionUI["status"] }) {
   const widthMap = {
     completed: "100%",
     "in-progress": "40%",
@@ -162,13 +145,39 @@ function MissionProgressBar({ status }: { status: Mission["status"] }) {
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function MissionsPage() {
+  const { data, loading } = useMissionsData();
   const [countdown, setCountdown] = useState(getMidnightWIBCountdown());
-  const [claimedIds, setClaimedIds] = useState<Set<number>>(new Set());
+  const [claimedIds, setClaimedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const id = setInterval(() => setCountdown(getMidnightWIBCountdown()), 1_000);
     return () => clearInterval(id);
   }, []);
+
+  // Map API/mock data to UI shape
+  const dailyMissions: MissionUI[] = data.missions.map((m) => {
+    const typeMap = MISSION_TYPE_MAP[m.type] ?? DEFAULT_TYPE_MAP;
+    return {
+      id: m.id,
+      emoji: typeMap.emoji,
+      title: m.title,
+      xp: m.xp,
+      status: m.status,
+      progress: m.progress,
+      icon: typeMap.icon,
+    };
+  });
+
+  const STREAK_DAYS = data.streak;
+  const weeklyChallenge = data.weeklyChallenge;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   const completedCount = dailyMissions.filter(
     (m) => m.status === "completed"
@@ -393,10 +402,10 @@ export default function MissionsPage() {
               <div className="flex items-start justify-between flex-wrap gap-2">
                 <div>
                   <p className="font-heading font-bold text-foreground text-lg">
-                    Selesaikan 5 Lesson dalam Seminggu
+                    {weeklyChallenge.title}
                   </p>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Progress: 2/5 lesson selesai
+                    Progress: {weeklyChallenge.done}/{weeklyChallenge.total} lesson selesai
                   </p>
                 </div>
                 <span className="text-sm font-bold text-[#D4A843] bg-[#D4A843]/10 px-3 py-1 rounded-lg">
@@ -407,14 +416,14 @@ export default function MissionsPage() {
               <div className="h-2 rounded-full bg-white/5 overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: "40%" }}
+                  animate={{ width: `${(weeklyChallenge.done / weeklyChallenge.total) * 100}%` }}
                   transition={{ duration: 1, ease: "easeOut" as const, delay: 0.3 }}
                   className="h-full rounded-full bg-gradient-to-r from-[#D4A843] to-[#B8922E]"
                 />
               </div>
 
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>2 dari 5 selesai</span>
+                <span>{weeklyChallenge.done} dari {weeklyChallenge.total} selesai</span>
                 <span>Berakhir dalam 4 hari</span>
               </div>
             </div>

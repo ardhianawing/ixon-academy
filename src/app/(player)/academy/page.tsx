@@ -11,9 +11,11 @@ import {
   Filter,
   ChevronDown,
   ChevronRight,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GameBadge } from "@/components/ui/GameBadge";
+import { useAcademyData } from "@/hooks/useAcademyData";
 
 /* ──────────────────────── Types ──────────────────────── */
 
@@ -34,84 +36,6 @@ interface Course {
   locked: boolean;
   lockedTier?: string;
 }
-
-/* ──────────────────────── Mock Data ──────────────────────── */
-
-const courses: Course[] = [
-  {
-    id: "jungle-mastery",
-    emoji: "\ud83c\udfaf",
-    title: "Jungle Mastery: Dari Noob ke Pro",
-    game: "MLBB",
-    level: "Intermediate",
-    category: "Hard Skill",
-    lessons: 12,
-    duration: 180,
-    progress: 40,
-    locked: false,
-  },
-  {
-    id: "gold-lane-domination",
-    emoji: "\u2694\ufe0f",
-    title: "Gold Lane Domination",
-    game: "MLBB",
-    level: "Advanced",
-    category: "Hard Skill",
-    lessons: 10,
-    duration: 150,
-    progress: null,
-    locked: true,
-    lockedTier: "Silver",
-  },
-  {
-    id: "ff-battle-royale",
-    emoji: "\ud83d\udd2b",
-    title: "Free Fire Battle Royale Strategy",
-    game: "FF",
-    level: "Beginner",
-    category: "Hard Skill",
-    lessons: 8,
-    duration: 120,
-    progress: null,
-    locked: false,
-  },
-  {
-    id: "shotcalling-communication",
-    emoji: "\ud83d\udde3\ufe0f",
-    title: "Shotcalling & Team Communication",
-    game: "Cross-game",
-    level: "Intermediate",
-    category: "Soft Skill",
-    lessons: 6,
-    duration: 90,
-    progress: null,
-    locked: false,
-  },
-  {
-    id: "tilt-management",
-    emoji: "\ud83e\udde0",
-    title: "Tilt Management & Mental Fortitude",
-    game: "Cross-game",
-    level: "Intermediate",
-    category: "Mental",
-    lessons: 8,
-    duration: 100,
-    progress: null,
-    locked: false,
-  },
-  {
-    id: "gamer-wellness",
-    emoji: "\ud83d\udcaa",
-    title: "Gamer Wellness: Body & Mind",
-    game: "Cross-game",
-    level: "Beginner",
-    category: "Wellness",
-    lessons: 5,
-    duration: 60,
-    progress: null,
-    locked: false,
-  },
-];
 
 const games: Game[] = ["All", "MLBB", "FF", "Cross-game"];
 const levels: Level[] = ["All", "Beginner", "Intermediate", "Advanced", "Expert"];
@@ -343,18 +267,28 @@ function CourseRow({ course, index }: { course: Course; index: number }) {
 /* ──────────────────────── Main Page ──────────────────────── */
 
 export default function AcademyPage() {
+  const { data: courses, loading } = useAcademyData();
   const [gameFilter, setGameFilter] = useState<Game>("All");
   const [levelFilter, setLevelFilter] = useState<Level>("All");
   const [categoryFilter, setCategoryFilter] = useState<Category>("All");
 
   const filtered = useMemo(() => {
+    if (!courses) return [];
     return courses.filter((c) => {
       if (gameFilter !== "All" && c.game !== gameFilter) return false;
       if (levelFilter !== "All" && c.level !== levelFilter) return false;
       if (categoryFilter !== "All" && c.category !== categoryFilter) return false;
       return true;
     });
-  }, [gameFilter, levelFilter, categoryFilter]);
+  }, [courses, gameFilter, levelFilter, categoryFilter]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">

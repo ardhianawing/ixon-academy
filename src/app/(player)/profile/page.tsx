@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Radar,
@@ -25,190 +24,14 @@ import {
   Brain,
   Heart,
   Zap,
+  Loader2,
 } from "lucide-react";
 
 import { TierBadge } from "@/components/ui/TierBadge";
 import { GameBadge } from "@/components/ui/GameBadge";
 import { XPBar } from "@/components/ui/XPBar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-const radarData = [
-  { stat: "Mechanical", value: 82 },
-  { stat: "Game Sense", value: 78 },
-  { stat: "Hero Mastery", value: 80 },
-  { stat: "Teamwork", value: 70 },
-  { stat: "Mental", value: 75 },
-];
-
-const talentBreakdown = [
-  { label: "Skill", score: 82, color: "from-blue-500 to-blue-400" },
-  { label: "Mindset", score: 75, color: "from-purple-500 to-purple-400" },
-  { label: "Commitment", score: 72, color: "from-emerald-500 to-emerald-400" },
-];
-
-const reviews = [
-  {
-    id: 1,
-    hero: "Hayabusa",
-    rating: 4,
-    maxRating: 5,
-    coach: "Coach Alex",
-    date: "5 Mar 2026",
-    breakdown: [
-      { label: "Mechanics", score: 85 },
-      { label: "Decision Making", score: 75 },
-      { label: "Map Awareness", score: 80 },
-    ],
-    summary: "Hayabusa splitpush dan timing shadow sangat baik. Perlu improve rotasi teamfight.",
-  },
-  {
-    id: 2,
-    hero: "Ling",
-    rating: 3.5,
-    maxRating: 5,
-    coach: "Coach Riku",
-    date: "28 Feb 2026",
-    breakdown: [
-      { label: "Mechanics", score: 78 },
-      { label: "Decision Making", score: 65 },
-      { label: "Map Awareness", score: 70 },
-    ],
-    summary: "Ling wall movement sudah smooth. Perlu lebih sabar menunggu timing engage.",
-  },
-];
-
-const courses = [
-  {
-    id: 1,
-    title: "Jungle Pathing Masterclass",
-    progress: 65,
-    totalLessons: 12,
-    completedLessons: 8,
-    category: "MLBB",
-  },
-  {
-    id: 2,
-    title: "Mental Fortitude for Gamers",
-    progress: 30,
-    totalLessons: 8,
-    completedLessons: 2,
-    category: "Soft Skills",
-  },
-];
-
-const communityStats = {
-  postCount: 8,
-  replyCount: 23,
-  reputation: 156,
-  recentPosts: [
-    {
-      id: "1",
-      title: "Tips Jungler Season 35 - Sharing Pengalaman",
-      likes: 34,
-      comments: 12,
-      timeAgo: "2 jam lalu",
-    },
-    {
-      id: "2",
-      title: "Highlight: Comeback Epic di Ranked",
-      likes: 67,
-      comments: 15,
-      timeAgo: "2 hari lalu",
-    },
-    {
-      id: "3",
-      title: "Cara Rotate Jungler di Late Game",
-      likes: 22,
-      comments: 8,
-      timeAgo: "5 hari lalu",
-    },
-  ],
-};
-
-const tournaments = [
-  {
-    id: 1,
-    title: "1v1 Showdown IXON S1",
-    placement: 3,
-    date: "20 Feb 2026",
-    game: "MLBB",
-    prize: "Badge + 500 XP",
-  },
-];
-
-interface Badge {
-  id: number;
-  emoji: string;
-  label: string;
-  description: string;
-  earned: boolean;
-  earnedDate?: string;
-}
-
-const badges: Badge[] = [
-  {
-    id: 1,
-    emoji: "\uD83C\uDF93",
-    label: "First Course",
-    description: "Selesaikan kursus pertama",
-    earned: true,
-    earnedDate: "Jan 2026",
-  },
-  {
-    id: 2,
-    emoji: "\uD83D\uDD25",
-    label: "7-Day Streak",
-    description: "Login 7 hari berturut-turut",
-    earned: true,
-    earnedDate: "Feb 2026",
-  },
-  {
-    id: 3,
-    emoji: "\u2B50",
-    label: "Clean Player",
-    description: "Tidak ada report selama 30 hari",
-    earned: true,
-    earnedDate: "Feb 2026",
-  },
-  {
-    id: 4,
-    emoji: "\uD83C\uDFC6",
-    label: "Tournament Top 3",
-    description: "Finish top 3 di turnamen",
-    earned: true,
-    earnedDate: "Feb 2026",
-  },
-  {
-    id: 5,
-    emoji: "\uD83D\uDCAC",
-    label: "Forum Active",
-    description: "Buat 10 post di forum",
-    earned: false,
-  },
-  {
-    id: 6,
-    emoji: "\uD83C\uDFAF",
-    label: "Sharpshooter",
-    description: "Skor 90+ di quiz",
-    earned: false,
-  },
-  {
-    id: 7,
-    emoji: "\uD83D\uDC51",
-    label: "Platinum Member",
-    description: "Upgrade ke Platinum",
-    earned: false,
-  },
-  {
-    id: 8,
-    emoji: "\uD83C\uDF1F",
-    label: "Talent 90+",
-    description: "Capai Talent Score 90+",
-    earned: false,
-  },
-];
+import { useProfileData } from "@/hooks/useProfileData";
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
@@ -281,6 +104,50 @@ function StarRating({ rating, max }: { rating: number; max: number }) {
 // ─── Page Component ───────────────────────────────────────────────────────────
 
 export default function ProfilePage() {
+  const { data, loading } = useProfileData();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  const { radarData, talentBreakdown } = data;
+  const communityStats = {
+    ...data.communityStats,
+    recentPosts: data.communityStats.recentPosts.map((p, i) => ({
+      id: String(i + 1),
+      title: p.title,
+      likes: p.likes,
+      comments: p.replies,
+      timeAgo: "",
+    })),
+  };
+  const reviews = data.reviews.map((r) => ({
+    ...r,
+    maxRating: 5,
+    summary: "",
+    breakdown: r.breakdown.map((b) => ({ label: b.aspect, score: b.score })),
+  }));
+  const courses = data.courses.map((c) => ({
+    ...c,
+    completedLessons: c.lessonsCompleted,
+    totalLessons: c.totalLessons,
+    category: "",
+  }));
+  const tournaments = data.tournaments.map((t) => ({
+    ...t,
+    title: t.name,
+    game: data.player.game,
+    prize: "",
+  }));
+  const badges = data.badges.map((b) => ({
+    ...b,
+    label: b.name,
+  }));
+
   return (
     <motion.div
       variants={container}

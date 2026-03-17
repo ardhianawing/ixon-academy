@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useParams } from "next/navigation";
+import { use, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -15,138 +14,12 @@ import {
   UserPlus,
   Medal,
   Swords,
+  Loader2,
 } from "lucide-react";
 
 import { TierBadge } from "@/components/ui/TierBadge";
 import { GameBadge } from "@/components/ui/GameBadge";
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-
-interface TeamEntry {
-  rank?: number;
-  name: string;
-  members: string[];
-  kda?: string;
-  score?: number;
-}
-
-interface EventDetail {
-  id: string;
-  title: string;
-  status: "upcoming" | "completed";
-  date: string;
-  format: string;
-  game: string;
-  minTier: string;
-  slots: string;
-  slotsTotal: number;
-  slotsFilled: number;
-  description: string[];
-  prizes: string[];
-  teams: TeamEntry[];
-}
-
-const eventsData: Record<string, EventDetail> = {
-  "weekly-scrim-12": {
-    id: "weekly-scrim-12",
-    title: "IXON Weekly Scrim #12",
-    status: "upcoming",
-    date: "15 Mar 2026",
-    format: "5v5",
-    game: "MLBB",
-    minTier: "SILVER",
-    slots: "24/32 slot",
-    slotsTotal: 32,
-    slotsFilled: 24,
-    description: [
-      "IXON Weekly Scrim #12 adalah sesi latih tanding mingguan yang dirancang khusus untuk pemain aktif IXON Academy. Scrim ini bertujuan untuk meningkatkan koordinasi tim, strategi drafting, dan komunikasi in-game dalam format pertandingan 5v5 yang kompetitif.",
-      "Setiap tim wajib memiliki minimal 5 pemain terdaftar sebagai anggota aktif IXON Academy dengan tier Silver atau lebih tinggi. Pertandingan akan menggunakan format Best-of-1 (BO1) pada fase grup, dan Best-of-3 (BO3) pada fase semifinal dan final. Draft pick menggunakan mode Tournament Draft.",
-      "Peserta diharapkan hadir tepat waktu sesuai jadwal yang telah ditentukan. Keterlambatan lebih dari 10 menit akan mengakibatkan diskualifikasi otomatis. Admin berhak memutuskan hasil pertandingan apabila terjadi masalah teknis atau pelanggaran aturan.",
-    ],
-    prizes: [
-      "Juara 1: Voucher MLBB 500 Diamond + 1 bulan Gold",
-      "Juara 2: Voucher MLBB 250 Diamond",
-      "Juara 3: Voucher MLBB 100 Diamond",
-      "MVP: Badge eksklusif + 500 XP bonus",
-    ],
-    teams: [
-      { name: "Phoenix Rising", members: ["PhoenixBlade", "TENSAI", "IXONReaper", "ShadowFF", "AceHunter"] },
-      { name: "Storm Breakers", members: ["StormX", "BlitzKing", "RapidFire", "ThunderBolt", "FlashPoint"] },
-      { name: "Night Wolves", members: ["NightHowl", "WolfFang", "MoonSlash", "DarkClaw", "SilverBite"] },
-      { name: "Dragon Slayers", members: ["DragonX", "SlayerOne", "FireBreath", "ScaleMaster", "TailWhip"] },
-      { name: "Cyber Knights", members: ["CyberK", "KnightFall", "ShieldWall", "LanceLot", "ArmorUp"] },
-      { name: "Venom Squad", members: ["VenomX", "PoisonDart", "ToxicBlade", "AcidRain", "SnakeBite"] },
-      { name: "Iron Fist", members: ["IronMan", "FistFury", "SteelGrip", "MetalCore", "HammerDown"] },
-      { name: "Shadow Legion", members: ["ShadowOne", "LegionX", "DarkArmy", "NightBlade", "GhostStep"] },
-    ],
-  },
-  "rookie-tournament-s1": {
-    id: "rookie-tournament-s1",
-    title: "IXON Rookie Tournament S1",
-    status: "upcoming",
-    date: "22 Mar 2026",
-    format: "Tournament 5v5",
-    game: "MLBB",
-    minTier: "GOLD",
-    slots: "12/16 slot",
-    slotsTotal: 16,
-    slotsFilled: 12,
-    description: [
-      "IXON Rookie Tournament Season 1 adalah turnamen resmi perdana yang diselenggarakan oleh IXON Academy untuk para pemain baru yang ingin membuktikan kemampuan mereka di level kompetitif. Turnamen ini terbuka untuk semua pemain dengan tier Gold ke atas.",
-      "Format turnamen menggunakan sistem Single Elimination dengan Best-of-3 (BO3) di setiap round. Setiap tim wajib mendaftarkan 5 pemain inti dan maksimal 2 pemain cadangan. Seluruh pemain harus terdaftar sebagai member aktif IXON Academy.",
-      "Hadiah yang disediakan tidak hanya berupa voucher game, tetapi juga kesempatan untuk direkrut oleh tim esports profesional melalui fitur scouting IXON Academy. Coach profesional akan mengamati performa setiap pemain selama turnamen berlangsung.",
-    ],
-    prizes: [
-      "Juara 1: Voucher MLBB 500 Diamond + 1 bulan Gold",
-      "Juara 2: Voucher MLBB 250 Diamond + 2 minggu Gold",
-      "Juara 3: Voucher MLBB 100 Diamond",
-      "Best Player: Sesi coaching gratis 1x + 1000 XP",
-    ],
-    teams: [
-      { name: "Rising Stars", members: ["StarOne", "StarTwo", "StarThree", "StarFour", "StarFive"] },
-      { name: "New Blood", members: ["BloodX", "FreshKill", "RookieKing", "NewBie", "FirstBlood"] },
-      { name: "Academy Elites", members: ["EliteA", "EliteB", "EliteC", "EliteD", "EliteE"] },
-      { name: "Young Guns", members: ["GunnerY", "ShotX", "BulletZ", "TriggerH", "ScopeK"] },
-      { name: "Future Legends", members: ["FutureX", "LegendY", "MythZ", "EpicA", "RareB"] },
-      { name: "Brave Hearts", members: ["BraveX", "HeartY", "CourageZ", "ValorA", "HonorB"] },
-      { name: "Wild Cards", members: ["WildX", "CardY", "JokerZ", "AceA", "KingB"] },
-      { name: "Zero Hour", members: ["ZeroX", "HourY", "TimeZ", "ClockA", "TickB"] },
-    ],
-  },
-  "solo-showdown-1": {
-    id: "solo-showdown-1",
-    title: "1v1 Solo Showdown",
-    status: "completed",
-    date: "1 Mar 2026",
-    format: "1v1",
-    game: "MLBB",
-    minTier: "FREE",
-    slots: "32/32 slot",
-    slotsTotal: 32,
-    slotsFilled: 32,
-    description: [
-      "1v1 Solo Showdown adalah event spesial IXON Academy yang menguji kemampuan mekanik individual setiap pemain. Tanpa bantuan rekan setim, setiap peserta harus mengandalkan skill pribadi untuk mengalahkan lawan satu per satu hingga menjadi juara.",
-      "Pertandingan dilakukan di map tengah (mid lane only) dengan aturan First to 2 Kills atau First Tower wins. Setiap pemain bebas memilih hero apa saja tanpa ada larangan ban. Pertandingan berlangsung dalam format Single Elimination Best-of-1.",
-      "Event ini terbuka untuk semua tier termasuk Free member. Ini adalah kesempatan sempurna bagi pemain baru untuk menunjukkan bakat dan mendapatkan perhatian dari scout IXON Academy. Seluruh pertandingan direkam dan dianalisis oleh sistem.",
-    ],
-    prizes: [
-      "Juara 1: Voucher MLBB 500 Diamond + 1 bulan Gold",
-      "Juara 2: Voucher MLBB 200 Diamond",
-      "Juara 3: Voucher MLBB 100 Diamond",
-      "Most Kills: Badge 'Solo King' + 300 XP",
-    ],
-    teams: [
-      { rank: 1, name: "PhoenixBlade", members: [], kda: "14/2/0", score: 2800 },
-      { rank: 2, name: "TENSAI", members: [], kda: "12/4/0", score: 2450 },
-      { rank: 3, name: "IXONReaper", members: [], kda: "10/5/0", score: 2100 },
-      { rank: 4, name: "StormX", members: [], kda: "9/5/0", score: 1900 },
-      { rank: 5, name: "NightHowl", members: [], kda: "8/6/0", score: 1750 },
-      { rank: 6, name: "DragonX", members: [], kda: "7/6/0", score: 1600 },
-      { rank: 7, name: "VenomX", members: [], kda: "6/7/0", score: 1400 },
-      { rank: 8, name: "CyberK", members: [], kda: "5/7/0", score: 1250 },
-    ],
-  },
-};
+import { useEventDetailData } from "@/hooks/useEventDetailData";
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
@@ -162,30 +35,21 @@ const item = {
 
 // ─── Page Component ───────────────────────────────────────────────────────────
 
-export default function EventDetailPage() {
-  const params = useParams();
-  const eventId = params.eventId as string;
-  const ev = eventsData[eventId];
+export default function EventDetailPage({
+  params,
+}: {
+  params: Promise<{ eventId: string }>;
+}) {
+  const { eventId } = use(params);
+  const { data: ev, loading } = useEventDetailData(eventId);
 
   const [teamName, setTeamName] = useState("");
   const [members, setMembers] = useState(["", "", "", "", ""]);
 
-  if (!ev) {
+  if (loading) {
     return (
-      <div className="max-w-5xl mx-auto py-12 text-center">
-        <Trophy className="size-12 text-muted-foreground/50 mx-auto mb-4" />
-        <h2 className="font-heading font-bold text-xl text-foreground mb-2">
-          Event Tidak Ditemukan
-        </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Event yang kamu cari tidak tersedia.
-        </p>
-        <Link
-          href="/events"
-          className="text-[#D4A843] text-sm font-semibold hover:underline"
-        >
-          Kembali ke Events
-        </Link>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="size-8 text-[#D4A843] animate-spin" />
       </div>
     );
   }

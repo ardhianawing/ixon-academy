@@ -13,6 +13,7 @@ import {
   ThumbsUp,
   Lock,
   ArrowUpRight,
+  Loader2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -25,8 +26,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useCommunityData } from "@/hooks/useCommunityData";
 
-// --- Mock Data ---
+// --- Constants ---
 
 const CATEGORIES = [
   { key: "all", label: "Semua" },
@@ -63,98 +65,17 @@ const categoryLabels: Record<string, string> = {
   "off-topic": "Off-Topic",
 };
 
-interface Post {
-  id: string;
-  title: string;
-  author: string;
-  authorInitials: string;
-  tier: string;
-  game: string | null;
-  category: string;
-  comments: number;
-  likes: number;
-  views: number;
-  timeAgo: string;
-}
-
-const POSTS: Post[] = [
-  {
-    id: "1",
-    title: "Tips Jungler Season 35 - Sharing Pengalaman",
-    author: "TENSAI",
-    authorInitials: "TE",
-    tier: "GOLD",
-    game: "MLBB",
-    category: "discussion",
-    comments: 12,
-    likes: 34,
-    views: 128,
-    timeAgo: "2 jam lalu",
-  },
-  {
-    id: "2",
-    title: "Review Hero Baru Chip - Worth Buy?",
-    author: "PhoenixBlade",
-    authorInitials: "PB",
-    tier: "PLATINUM",
-    game: "MLBB",
-    category: "question",
-    comments: 28,
-    likes: 56,
-    views: 312,
-    timeAgo: "5 jam lalu",
-  },
-  {
-    id: "3",
-    title: "Cara Mengatasi Tilt Setelah Losing Streak",
-    author: "IXONReaper",
-    authorInitials: "IR",
-    tier: "SILVER",
-    game: null,
-    category: "mental",
-    comments: 8,
-    likes: 42,
-    views: 95,
-    timeAgo: "kemarin",
-  },
-  {
-    id: "4",
-    title: "Highlight: Comeback Epic di Ranked",
-    author: "TENSAI",
-    authorInitials: "TE",
-    tier: "GOLD",
-    game: "MLBB",
-    category: "highlight",
-    comments: 15,
-    likes: 67,
-    views: 205,
-    timeAgo: "2 hari lalu",
-  },
-  {
-    id: "5",
-    title: "Guide: Rotasi Gold Laner Early Game",
-    author: "PhoenixBlade",
-    authorInitials: "PB",
-    tier: "PLATINUM",
-    game: "MLBB",
-    category: "guide",
-    comments: 22,
-    likes: 89,
-    views: 445,
-    timeAgo: "3 hari lalu",
-  },
-];
-
-// Simulate current user tier — change to "FREE" to see the upgrade banner
-const CURRENT_USER_TIER: string = "FREE";
+// Fallback — will be replaced when user profile hook is available
+const CURRENT_USER_TIER = "FREE";
 
 export default function CommunityPage() {
+  const { data: posts, loading } = useCommunityData();
   const [activeCategory, setActiveCategory] = useState("all");
   const [sortMode, setSortMode] = useState<SortMode>("terbaru");
 
   const isFreeUser = CURRENT_USER_TIER === "FREE";
 
-  const filteredPosts = POSTS.filter((post) => {
+  const filteredPosts = (posts ?? []).filter((post) => {
     if (activeCategory === "all") return true;
     if (activeCategory === "mlbb") return post.game === "MLBB";
     if (activeCategory === "ff") return post.game === "FF";
@@ -268,6 +189,11 @@ export default function CommunityPage() {
       </div>
 
       {/* Post list */}
+      {loading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
       <div className="space-y-3">
         {filteredPosts.map((post, idx) => (
           <motion.div
@@ -329,6 +255,7 @@ export default function CommunityPage() {
           </motion.div>
         ))}
       </div>
+      )}
     </div>
   );
 }
